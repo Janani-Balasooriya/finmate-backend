@@ -51,6 +51,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                 .requestMatchers("/api/test/public").permitAll()
+                // Swagger UI and API docs - allow all access
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html").permitAll()
+                .requestMatchers("/api-docs/**", "/v3/api-docs/**", "/v3/api-docs.yaml", "/v3/api-docs.yml").permitAll()
+                .requestMatchers("/swagger-resources/**", "/webjars/**", "/swagger-ui.html/**").permitAll()
+                .requestMatchers("/favicon.ico", "/error").permitAll()
                 .requestMatchers("/api/auth/me", "/api/auth/logout", "/api/test/protected").authenticated()
                 .anyRequest().authenticated()
             )
