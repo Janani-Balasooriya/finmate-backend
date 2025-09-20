@@ -4,7 +4,9 @@ import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.users.model.enums.Role;
 import com.finmate.finmate_backend.users.model.enums.Status;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -14,6 +16,8 @@ import java.time.Instant;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(
         name = "users",
