@@ -1,6 +1,6 @@
 package com.finmate.finmate_backend.income.model;
 
-import com.finmate.finmate_backend.families.model.Family;
+import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,8 +27,8 @@ public class IncomeSource {
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 
-    // FK: income_sources.families_id -> families.id
+    // FK:
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "families_id", nullable = false)
-    private Family family;
+    @JoinColumn(name = "users_id", nullable = false)
+    private User user;
 }

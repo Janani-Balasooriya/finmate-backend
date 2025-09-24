@@ -1,9 +1,11 @@
 package com.finmate.finmate_backend.expenses.model;
 
-import com.finmate.finmate_backend.families.model.Family;
+import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -24,12 +26,15 @@ public class ExpenseCategory {
     @Column(name = "color", length = 16)
     private String color;
 
+    @Column(name = "budget_amount", nullable = false, precision = 14, scale = 2)
+    private BigDecimal budgetAmount = BigDecimal.ZERO;
+
     // TINYINT(1) → boolean
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 
     // FK: expense_categories.families_id → families.id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "families_id", nullable = false)
-    private Family family;
+    @JoinColumn(name = "users_id", nullable = false)
+    private User user;
 }

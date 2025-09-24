@@ -49,12 +49,12 @@ public class User {
     // MySQL ENUM('admin','member') -> Java enum
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
-    private Role role = Role.MEMBER;
+    private Role role = Role.member;
 
     // MySQL ENUM('active','removed') -> Java enum
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private Status status = Status.ACTIVE;
+    private Status status = Status.active;
 
     // DB has DEFAULT CURRENT_TIMESTAMP and ON UPDATE CURRENT_TIMESTAMP,
     // but we also keep these updated via JPA auditing.
@@ -68,6 +68,6 @@ public class User {
 
     // FK: users.families_id -> families.id (nullable in schema)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "families_id")
+    @JoinColumn(name = "families_id", nullable = true)
     private Family family;
 }

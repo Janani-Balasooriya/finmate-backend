@@ -11,9 +11,6 @@ import com.finmate.finmate_backend.users.model.enums.Role;
 import com.finmate.finmate_backend.users.model.enums.Status;
 import com.finmate.finmate_backend.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,25 +27,21 @@ public class AuthService {
     private final FamilyInviteRepository familyInviteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
 
     public AuthResponse login(LoginRequest loginRequest) {
         try {
-            // Authenticate user
-            authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    loginRequest.getEmail(),
-                    loginRequest.getPassword()
-                )
-            );
-
             // Get user from database
             User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Invalid email or password - no user in database"));
 
             // Check if user is active
-            if (user.getStatus() != Status.ACTIVE) {
+            if (user.getStatus() != Status.active) {
                 throw new RuntimeException("Account is not active");
+            }
+
+            // Verify password manually
+            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+                throw new RuntimeException("Invalid email or password - password doesn't match");
             }
 
             // Generate JWT token
@@ -56,8 +49,8 @@ public class AuthService {
 
             return new AuthResponse(token, user);
 
-        } catch (AuthenticationException e) {
-            throw new RuntimeException("Invalid email or password");
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid email or password - catch exception");
         }
     }
 
@@ -73,8 +66,8 @@ public class AuthService {
         user.setLastName(registerRequest.getLastName());
         user.setEmail(registerRequest.getEmail());
         user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(Role.MEMBER);
-        user.setStatus(Status.ACTIVE);
+        user.setRole(Role.member);
+        user.setStatus(Status.active);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
 

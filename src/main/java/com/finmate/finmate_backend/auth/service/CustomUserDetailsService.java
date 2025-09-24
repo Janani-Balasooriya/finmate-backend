@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             .accountExpired(false)
             .accountLocked(false)
             .credentialsExpired(false)
-            .disabled(user.getStatus() != com.finmate.finmate_backend.users.model.enums.Status.ACTIVE)
+            .disabled(user.getStatus() != com.finmate.finmate_backend.users.model.enums.Status.active)
             .build();
     }
 }
