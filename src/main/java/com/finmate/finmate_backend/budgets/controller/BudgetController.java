@@ -3,7 +3,6 @@ package com.finmate.finmate_backend.budgets.controller;
 import com.finmate.finmate_backend.auth.service.AuthService;
 import com.finmate.finmate_backend.budgets.dto.BudgetDtos.BudgetResponse;
 import com.finmate.finmate_backend.budgets.dto.BudgetDtos.CreateOrUpdateBudgetRequest;
-import com.finmate.finmate_backend.budgets.dto.BudgetDtos.BudgetItem;
 import com.finmate.finmate_backend.budgets.service.BudgetService;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
@@ -31,15 +30,23 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<BudgetItem> create(@RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
+    public ResponseEntity<?> create(@RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
         User user = getUser(authentication);
-        return ResponseEntity.ok(budgetService.create(user, req));
+        try {
+            return ResponseEntity.ok(budgetService.create(user, req));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BudgetItem> update(@PathVariable Long id, @RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
         User user = getUser(authentication);
-        return ResponseEntity.ok(budgetService.update(user, id, req));
+        try {
+            return ResponseEntity.ok(budgetService.update(user, id, req));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")

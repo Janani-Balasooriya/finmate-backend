@@ -17,6 +17,8 @@ public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory
 
     @Query("select coalesce(sum(ec.budgetAmount), 0) from ExpenseCategory ec where ec.user = :user and ec.deleted = false")
     java.math.BigDecimal sumActiveBudgetsByUser(@Param("user") User user);
+
+    boolean existsByUserAndNameIgnoreCaseAndDeletedFalse(User user, String name);
 }
 
 

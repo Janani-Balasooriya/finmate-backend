@@ -60,6 +60,9 @@ public class BudgetService {
     }
 
     public BudgetItem create(User user, CreateOrUpdateBudgetRequest req) {
+        if (expenseCategoryRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, req.name())) {
+            throw new IllegalArgumentException("A budget category with this name already exists");
+        }
         ExpenseCategory category = new ExpenseCategory();
         category.setUser(user);
         category.setName(req.name());
@@ -76,7 +79,14 @@ public class BudgetService {
     public BudgetItem update(User user, Long id, CreateOrUpdateBudgetRequest req) {
         ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new RuntimeException("Budget category not found"));
-        if (req.name() != null) category.setName(req.name());
+        if (req.name() != null) {
+            String newName = req.name();
+            if (!newName.equalsIgnoreCase(category.getName())
+                    && expenseCategoryRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, newName)) {
+                throw new IllegalArgumentException("A budget category with this name already exists");
+            }
+            category.setName(newName);
+        }
         if (req.icon() != null) category.setIcon(req.icon());
         if (req.color() != null) category.setColor(req.color());
         if (req.budgetAmount() != null) category.setBudgetAmount(req.budgetAmount());
