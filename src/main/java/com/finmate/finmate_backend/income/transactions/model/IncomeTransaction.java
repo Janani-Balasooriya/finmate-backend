@@ -1,6 +1,7 @@
-package com.finmate.finmate_backend.income.model;
+package com.finmate.finmate_backend.income.transactions.model;
 
 import com.finmate.finmate_backend.accounts.model.Account;
+import com.finmate.finmate_backend.income.sources.model.IncomeSource;
 import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.finmate.finmate_backend.income.model;
+package com.finmate.finmate_backend.income.sources.model;
 
 import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;
@@ -17,9 +17,6 @@ public class IncomeSource {
 
     @Column(name = "name", nullable = false, length = 80)
     private String name;
-
-    @Column(name = "icon", length = 60)
-    private String icon;
 
     @Column(name = "color", length = 16)
     private String color;
