@@ -1,6 +1,7 @@
-package com.finmate.finmate_backend.expenses.model;
+package com.finmate.finmate_backend.expenses.transactions.model;
 
 import com.finmate.finmate_backend.accounts.model.Account;
+import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
 import com.finmate.finmate_backend.subscriptions.model.Subscription;
 import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;

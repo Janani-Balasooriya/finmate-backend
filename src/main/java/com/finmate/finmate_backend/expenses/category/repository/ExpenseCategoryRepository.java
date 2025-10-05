@@ -1,6 +1,6 @@
-package com.finmate.finmate_backend.expenses.repository;
+package com.finmate.finmate_backend.expenses.category.repository;
 
-import com.finmate.finmate_backend.expenses.model.ExpenseCategory;
+import com.finmate.finmate_backend.expenses.category.model.ExpenseCategory;
 import com.finmate.finmate_backend.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

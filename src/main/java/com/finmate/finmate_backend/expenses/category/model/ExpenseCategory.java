@@ -1,4 +1,4 @@
-package com.finmate.finmate_backend.expenses.model;
+package com.finmate.finmate_backend.expenses.category.model;
 
 import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;
