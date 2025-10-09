@@ -71,6 +71,14 @@ public class IncomeSourceService {
         IncomeSource updated = incomeSourceRepository.save(incomeSource);
         return toItem(updated);
     }
+
+    public void deleteIncomeSource(User user, Long id) {
+        IncomeSource incomeSource = incomeSourceRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new IllegalArgumentException("Income source not found"));
+
+        incomeSource.setDeleted(true);
+        incomeSourceRepository.save(incomeSource);
+    }
 }
 
 

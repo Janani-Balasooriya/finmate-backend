@@ -62,6 +62,17 @@ public class IncomeSourceController {
             return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteIncomeSource(@PathVariable Long id, Authentication authentication) {
+        User user = getUser(authentication);
+        try {
+            incomeSourceService.deleteIncomeSource(user, id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
 
 
