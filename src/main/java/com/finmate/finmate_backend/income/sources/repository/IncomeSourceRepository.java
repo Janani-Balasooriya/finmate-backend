@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IncomeSourceRepository extends JpaRepository<IncomeSource, Long> {
 
@@ -13,6 +14,8 @@ public interface IncomeSourceRepository extends JpaRepository<IncomeSource, Long
     List<IncomeSource> findActiveByUser(User user);
 
     boolean existsByUserAndNameIgnoreCaseAndDeletedFalse(User user, String name);
+
+    Optional<IncomeSource> findByIdAndUser(Long id, User user);
 }
 
 

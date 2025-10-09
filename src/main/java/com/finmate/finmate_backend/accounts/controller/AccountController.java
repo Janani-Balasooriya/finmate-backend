@@ -56,7 +56,8 @@ public class AccountController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAccount(@PathVariable Long id, @RequestBody UpdateAccountRequest request, Authentication authentication) {
+    public ResponseEntity<?> updateAccount(@PathVariable Long id, @RequestBody UpdateAccountRequest request,
+            Authentication authentication) {
         User user = getUser(authentication);
         try {
             return ResponseEntity.ok(accountService.updateAccount(user, id, request));
@@ -85,4 +86,3 @@ public class AccountController {
         return ResponseEntity.ok(dtos);
     }
 }
-

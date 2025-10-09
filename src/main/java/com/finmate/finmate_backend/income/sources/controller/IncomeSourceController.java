@@ -3,6 +3,7 @@ package com.finmate.finmate_backend.income.sources.controller;
 import com.finmate.finmate_backend.auth.service.AuthService;
 import com.finmate.finmate_backend.income.sources.dto.IncomeSourceDtos.CreateIncomeSourceRequest;
 import com.finmate.finmate_backend.income.sources.dto.IncomeSourceDtos.IncomeSourceItem;
+import com.finmate.finmate_backend.income.sources.dto.IncomeSourceDtos.UpdateIncomeSourceRequest;
 import com.finmate.finmate_backend.income.sources.service.IncomeSourceService;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 @RestController
 @RequestMapping("/api/income-sources")
@@ -43,6 +48,16 @@ public class IncomeSourceController {
         User user = getUser(authentication);
         try {
             return ResponseEntity.ok(incomeSourceService.create(user, req));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateIncomeSource(@PathVariable Long id, @RequestBody UpdateIncomeSourceRequest request, Authentication authentication) {
+        User user = getUser(authentication);
+        try{
+            return ResponseEntity.ok(incomeSourceService.updateIncomeSource(user, id, request));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
         }

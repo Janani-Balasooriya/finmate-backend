@@ -2,6 +2,7 @@ package com.finmate.finmate_backend.income.sources.service;
 
 import com.finmate.finmate_backend.income.sources.dto.IncomeSourceDtos.CreateIncomeSourceRequest;
 import com.finmate.finmate_backend.income.sources.dto.IncomeSourceDtos.IncomeSourceItem;
+import com.finmate.finmate_backend.income.sources.dto.IncomeSourceDtos.UpdateIncomeSourceRequest;
 import com.finmate.finmate_backend.income.sources.model.IncomeSource;
 import com.finmate.finmate_backend.income.sources.repository.IncomeSourceRepository;
 import com.finmate.finmate_backend.users.model.User;
@@ -44,6 +45,31 @@ public class IncomeSourceService {
 
     private IncomeSourceItem toItem(IncomeSource s) {
         return new IncomeSourceItem(s.getId(), s.getName(), s.getColor());
+    }
+
+    public IncomeSourceItem updateIncomeSource(User user, Long id, UpdateIncomeSourceRequest request) {
+        IncomeSource incomeSource = incomeSourceRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new IllegalArgumentException("Income source not found"));
+
+        if (request.name() != null && !request.name().trim().isEmpty()) {
+            String newName = request.name().trim();
+            if (!newName.equalsIgnoreCase(incomeSource.getName()) &&
+                    incomeSourceRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, newName)) {
+                throw new IllegalArgumentException("Income source with this name already exists");
+            }
+            incomeSource.setName(newName);
+        }
+
+        if (request.color() != null) {
+            incomeSource.setColor(request.color());
+        }
+
+        if (request.active() != null) {
+            incomeSource.setDeleted(!request.active());
+        }
+
+        IncomeSource updated = incomeSourceRepository.save(incomeSource);
+        return toItem(updated);
     }
 }
 
