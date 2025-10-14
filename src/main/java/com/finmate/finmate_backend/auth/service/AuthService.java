@@ -4,8 +4,10 @@ import com.finmate.finmate_backend.auth.JwtUtil;
 import com.finmate.finmate_backend.auth.dto.AuthResponse;
 import com.finmate.finmate_backend.auth.dto.LoginRequest;
 import com.finmate.finmate_backend.auth.dto.RegisterRequest;
+import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.families.model.FamilyInvite;
 import com.finmate.finmate_backend.families.repository.FamilyInviteRepository;
+import com.finmate.finmate_backend.families.repository.FamilyRepository;
 import com.finmate.finmate_backend.users.model.User;
 import com.finmate.finmate_backend.users.model.enums.Role;
 import com.finmate.finmate_backend.users.model.enums.Status;
@@ -24,6 +26,7 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final FamilyRepository familyRepository;
     private final FamilyInviteRepository familyInviteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -60,6 +63,11 @@ public class AuthService {
             throw new RuntimeException("Email already exists");
         }
 
+        // Create new family for the user
+        Family family = new Family();
+        family.setCreatedAt(Instant.now());
+        Family savedFamily = familyRepository.save(family);
+
         // Create new user
         User user = new User();
         user.setFirstName(registerRequest.getFirstName());
@@ -70,17 +78,18 @@ public class AuthService {
         user.setStatus(Status.active);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
+        user.setFamilies(savedFamily);
 
         // Handle family invitation if provided
         if (registerRequest.getInviteToken() != null && !registerRequest.getInviteToken().isEmpty()) {
             Optional<FamilyInvite> invite = familyInviteRepository.findByToken(registerRequest.getInviteToken());
-            if (invite.isPresent() && invite.get().getStatus() == com.finmate.finmate_backend.families.model.enums.InviteStatus.PENDING) {
+            if (invite.isPresent()) {
                 // Add user to the family
-                user.setFamily(invite.get().getFamilies());
-                
-                // Update invite status to accepted
-                invite.get().setStatus(com.finmate.finmate_backend.families.model.enums.InviteStatus.ACCEPTED);
-                familyInviteRepository.save(invite.get());
+                user.setFamilies(invite.get().getFamilies());
+
+                // Update invite status to accepted (assuming there's a status field, but it's not in the model)
+                // invite.get().setStatus(com.finmate.finmate_backend.families.model.enums.InviteStatus.ACCEPTED);
+                // familyInviteRepository.save(invite.get());
             }
         }
 

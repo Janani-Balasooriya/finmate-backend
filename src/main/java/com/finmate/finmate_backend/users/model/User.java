@@ -1,5 +1,6 @@
 package com.finmate.finmate_backend.users.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.users.model.enums.Role;
 import com.finmate.finmate_backend.users.model.enums.Status;
@@ -66,8 +67,9 @@ public class User {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    // FK: users.families_id -> families.id (nullable in schema)
+    // FK: users.families_id -> families.id (NOT NULL)
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "families_id", nullable = true)
-    private Family family;
+    @JoinColumn(name = "families_id", nullable = false)
+    private Family families;
 }
