@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.finmate.finmate_backend.users.model.User;
+
 import java.time.Instant;
 
 @Getter
@@ -33,4 +35,9 @@ public class FamilyInvite {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "families_id")
     private Family families;
+
+        // FK: family_invites.users_id -> users.id
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "users_id", nullable = false)
+    private User user;
 }
