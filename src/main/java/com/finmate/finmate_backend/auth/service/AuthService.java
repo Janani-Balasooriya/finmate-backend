@@ -6,8 +6,8 @@ import com.finmate.finmate_backend.auth.dto.LoginRequest;
 import com.finmate.finmate_backend.auth.dto.RegisterRequest;
 import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.families.model.FamilyInvite;
-import com.finmate.finmate_backend.families.repository.FamilyInviteRepository;
 import com.finmate.finmate_backend.families.repository.FamilyRepository;
+import com.finmate.finmate_backend.families.service.FamilyInviteService;
 import com.finmate.finmate_backend.users.model.User;
 import com.finmate.finmate_backend.users.model.enums.Role;
 import com.finmate.finmate_backend.users.model.enums.Status;
@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +26,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final FamilyRepository familyRepository;
-    private final FamilyInviteRepository familyInviteRepository;
+    private final FamilyInviteService familyInviteService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -63,10 +62,22 @@ public class AuthService {
             throw new RuntimeException("Email already exists");
         }
 
-        // Create new family for the user
-        Family family = new Family();
-        family.setCreatedAt(Instant.now());
-        Family savedFamily = familyRepository.save(family);
+        Family assignedFamily;
+
+        // Handle family invitation if provided
+        if (registerRequest.getInviteToken() != null && !registerRequest.getInviteToken().isEmpty()) {
+            // Validate and consume the invite token
+            FamilyInvite invite = familyInviteService.validateInviteToken(registerRequest.getInviteToken());
+            assignedFamily = invite.getFamilies();
+
+            // Consume the token (single-use)
+            familyInviteService.consumeInviteToken(registerRequest.getInviteToken());
+        } else {
+            // Create new family for the user (regular registration)
+            Family family = new Family();
+            family.setCreatedAt(Instant.now());
+            assignedFamily = familyRepository.save(family);
+        }
 
         // Create new user
         User user = new User();
@@ -74,24 +85,11 @@ public class AuthService {
         user.setLastName(registerRequest.getLastName());
         user.setEmail(registerRequest.getEmail());
         user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(Role.member);
+        user.setRole(registerRequest.getInviteToken() != null && !registerRequest.getInviteToken().isEmpty() ? Role.member : Role.admin);
         user.setStatus(Status.active);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
-        user.setFamilies(savedFamily);
-
-        // Handle family invitation if provided
-        if (registerRequest.getInviteToken() != null && !registerRequest.getInviteToken().isEmpty()) {
-            Optional<FamilyInvite> invite = familyInviteRepository.findByToken(registerRequest.getInviteToken());
-            if (invite.isPresent()) {
-                // Add user to the family
-                user.setFamilies(invite.get().getFamilies());
-
-                // Update invite status to accepted (assuming there's a status field, but it's not in the model)
-                // invite.get().setStatus(com.finmate.finmate_backend.families.model.enums.InviteStatus.ACCEPTED);
-                // familyInviteRepository.save(invite.get());
-            }
-        }
+        user.setFamilies(assignedFamily);
 
         // Save user
         User savedUser = userRepository.save(user);

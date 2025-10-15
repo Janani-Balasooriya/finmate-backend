@@ -82,4 +82,28 @@ public class FamilyInviteService {
 
         familyInviteRepository.delete(invite);
     }
+
+    @Transactional(readOnly = true)
+    public FamilyInvite validateInviteToken(String token) {
+        FamilyInvite invite = familyInviteRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Invalid invite token"));
+
+        // Check if expired
+        if (invite.getExpiresAt() != null && invite.getExpiresAt().isBefore(Instant.now())) {
+            throw new RuntimeException("Invite token has expired");
+        }
+
+        // Touch lazy-loaded properties to initialize them
+        invite.getUser().getFirstName();
+        invite.getFamilies().getId();
+
+        return invite;
+    }
+
+    public void consumeInviteToken(String token) {
+        FamilyInvite invite = familyInviteRepository.findByToken(token)
+            .orElseThrow(() -> new RuntimeException("Invalid invite token"));
+
+        familyInviteRepository.delete(invite);
+    }
 }

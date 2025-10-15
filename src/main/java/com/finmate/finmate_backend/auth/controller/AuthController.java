@@ -6,7 +6,6 @@ import com.finmate.finmate_backend.auth.dto.LoginRequest;
 import com.finmate.finmate_backend.auth.dto.RegisterRequest;
 import com.finmate.finmate_backend.auth.service.AuthService;
 import com.finmate.finmate_backend.users.model.User;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

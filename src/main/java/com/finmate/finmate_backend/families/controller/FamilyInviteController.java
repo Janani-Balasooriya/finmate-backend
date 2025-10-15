@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.families.controller;
 
 import com.finmate.finmate_backend.auth.dto.ApiResponse;
+import com.finmate.finmate_backend.families.dto.InvitePreviewDto;
 import com.finmate.finmate_backend.families.model.FamilyInvite;
 import com.finmate.finmate_backend.families.service.FamilyInviteService;
 import com.finmate.finmate_backend.users.model.User;
@@ -64,6 +65,21 @@ public class FamilyInviteController {
             String email = authentication.getName();
             familyInviteService.revokeInvite(familyId, inviteId, email);
             return ResponseEntity.ok(ApiResponse.success("Invite revoked successfully", "Invite has been revoked"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/validate/{token}")
+    public ResponseEntity<ApiResponse<InvitePreviewDto>> validateInviteToken(@PathVariable String token) {
+        try {
+            FamilyInvite invite = familyInviteService.validateInviteToken(token);
+            InvitePreviewDto dto = new InvitePreviewDto(
+                invite.getUser().getFirstName(),
+                invite.getFamilies().getId()
+            );
+            return ResponseEntity.ok(ApiResponse.success("Invite token is valid", dto));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));
