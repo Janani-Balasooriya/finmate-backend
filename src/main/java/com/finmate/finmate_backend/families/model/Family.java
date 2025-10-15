@@ -6,6 +6,9 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.time.Instant;
 
 @Getter
@@ -13,6 +16,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "families")
 @EntityListeners(AuditingEntityListener.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Family {
 
     @Id
@@ -22,5 +26,6 @@ public class Family {
     // DB default is CURRENT_TIMESTAMP, but we also enable JPA auditing
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
+    @JsonIgnore
     private Instant createdAt;
 }

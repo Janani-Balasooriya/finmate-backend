@@ -68,7 +68,6 @@ public class User {
     private Instant updatedAt;
 
     // FK: users.families_id -> families.id (NOT NULL)
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "families_id", nullable = false)
     private Family families;

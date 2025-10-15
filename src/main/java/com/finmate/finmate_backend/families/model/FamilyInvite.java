@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finmate.finmate_backend.users.model.User;
 
 import java.time.Instant;
@@ -29,6 +30,7 @@ public class FamilyInvite {
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
+    @JsonIgnore
     private Instant createdAt;
 
     // FK: family_invites.families_id → families.id
