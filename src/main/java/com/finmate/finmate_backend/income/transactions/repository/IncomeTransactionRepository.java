@@ -73,4 +73,112 @@ public interface IncomeTransactionRepository extends JpaRepository<IncomeTransac
 
     // Check if transaction exists for user
     boolean existsByUserAndId(User user, Long id);
+
+// -------- Family-scoped finders --------
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId
+  ORDER BY it.transactionDate DESC, it.id DESC
+""")
+Page<IncomeTransaction> findByFamilyIdOrderByTransactionDateDesc(@Param("familyId") Long familyId, Pageable pageable);
+
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId AND it.id = :id
+""")
+Optional<IncomeTransaction> findByFamilyIdAndId(@Param("familyId") Long familyId, @Param("id") Long id);
+
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId
+    AND it.transactionDate BETWEEN :startDate AND :endDate
+  ORDER BY it.transactionDate DESC
+""")
+List<IncomeTransaction> findByFamilyIdAndTransactionDateBetween(@Param("familyId") Long familyId,
+                                                                @Param("startDate") LocalDate startDate,
+                                                                @Param("endDate") LocalDate endDate);
+
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId AND it.account.id = :accountId
+  ORDER BY it.transactionDate DESC
+""")
+List<IncomeTransaction> findByFamilyIdAndAccountId(@Param("familyId") Long familyId, @Param("accountId") Long accountId);
+
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId AND it.incomeSource.id = :incomeSourceId
+  ORDER BY it.transactionDate DESC
+""")
+List<IncomeTransaction> findByFamilyIdAndIncomeSourceId(@Param("familyId") Long familyId, @Param("incomeSourceId") Long incomeSourceId);
+
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId AND it.transactionDate >= :fromDate
+  ORDER BY it.transactionDate DESC
+""")
+List<IncomeTransaction> findByFamilyIdAndTransactionDateFrom(@Param("familyId") Long familyId, @Param("fromDate") LocalDate fromDate);
+
+@Query("""
+  SELECT it FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId AND it.transactionDate <= :toDate
+  ORDER BY it.transactionDate DESC
+""")
+List<IncomeTransaction> findByFamilyIdAndTransactionDateTo(@Param("familyId") Long familyId, @Param("toDate") LocalDate toDate);
+
+// -------- Family-scoped summaries --------
+@Query("SELECT COALESCE(SUM(it.amount), 0) FROM IncomeTransaction it WHERE it.user.families.id = :familyId")
+BigDecimal getTotalAmountByFamilyId(@Param("familyId") Long familyId);
+
+@Query("""
+  SELECT COALESCE(SUM(it.amount), 0)
+  FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId
+    AND it.transactionDate BETWEEN :startDate AND :endDate
+""")
+BigDecimal getTotalAmountByFamilyAndDateRange(@Param("familyId") Long familyId,
+                                              @Param("startDate") LocalDate startDate,
+                                              @Param("endDate") LocalDate endDate);
+
+@Query("SELECT COUNT(it) FROM IncomeTransaction it WHERE it.user.families.id = :familyId")
+Long getTransactionCountByFamilyId(@Param("familyId") Long familyId);
+
+@Query("""
+  SELECT COUNT(it)
+  FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId
+    AND it.transactionDate BETWEEN :startDate AND :endDate
+""")
+Long getTransactionCountByFamilyAndDateRange(@Param("familyId") Long familyId,
+                                             @Param("startDate") LocalDate startDate,
+                                             @Param("endDate") LocalDate endDate);
+
+@Query("SELECT MIN(it.transactionDate) FROM IncomeTransaction it WHERE it.user.families.id = :familyId")
+LocalDate getEarliestTransactionDateByFamilyId(@Param("familyId") Long familyId);
+
+@Query("SELECT MAX(it.transactionDate) FROM IncomeTransaction it WHERE it.user.families.id = :familyId")
+LocalDate getLatestTransactionDateByFamilyId(@Param("familyId") Long familyId);
+
+// Use FUNCTION for portability
+@Query("""
+  SELECT COALESCE(SUM(it.amount), 0)
+  FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId
+    AND FUNCTION('year', it.transactionDate) = :year
+    AND FUNCTION('month', it.transactionDate) = :month
+""")
+BigDecimal getTotalAmountByFamilyAndMonth(@Param("familyId") Long familyId,
+                                          @Param("year") int year,
+                                          @Param("month") int month);
+
+@Query("""
+  SELECT COALESCE(SUM(it.amount), 0)
+  FROM IncomeTransaction it
+  WHERE it.user.families.id = :familyId
+    AND FUNCTION('year', it.transactionDate) = :year
+""")
+BigDecimal getTotalAmountByFamilyAndYear(@Param("familyId") Long familyId, @Param("year") int year);
+
+// Optional existence check
+boolean existsByUser_Families_IdAndId(Long familyId, Long id);
 }
