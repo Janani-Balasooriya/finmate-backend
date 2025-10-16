@@ -77,7 +77,7 @@ public class BudgetService {
     }
 
     public BudgetItem update(User user, Long id, CreateOrUpdateBudgetRequest req) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(id, user)
+        ExpenseCategory category = expenseCategoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Budget category not found"));
         if (req.name() != null) {
             String newName = req.name();
@@ -137,7 +137,7 @@ public class BudgetService {
     }
 
     public void softDelete(User user, Long id) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(id, user)
+        ExpenseCategory category = expenseCategoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Budget category not found"));
         category.setDeleted(true);
         expenseCategoryRepository.save(category);
