@@ -21,8 +21,10 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final CurrencyCodeRepository currencyCodeRepository;
 
+    private Long familyIdOf(User user) { return user.getFamilies().getId(); }
+
     public List<AccountItem> getActiveAccounts(User user) {
-        return accountRepository.findByUserAndActiveTrue(user)
+        return accountRepository.findByFamilyIdAndActiveTrue(familyIdOf(user))
                 .stream()
                 .map(account -> new AccountItem(
                         account.getId(),
@@ -34,7 +36,7 @@ public class AccountService {
     }
 
     public List<AccountBalance> getAccountBalances(User user) {
-        return accountRepository.findByUser(user)
+        return accountRepository.findByFamilyId(familyIdOf(user))
                 .stream()
                 .filter(Account::isActive)
                 .map(account -> {
@@ -51,7 +53,7 @@ public class AccountService {
     }
 
     public AccountItem createAccount(User user, CreateAccountRequest request) {
-        if (accountRepository.existsByUserAndNameIgnoreCaseAndActiveTrue(user, request.name())) {
+        if (accountRepository.existsByUser_Families_IdAndNameIgnoreCaseAndActiveTrue(familyIdOf(user), request.name())) {
             throw new IllegalArgumentException("An account with this name already exists");
         }
 
@@ -75,12 +77,12 @@ public class AccountService {
     }
 
     public AccountItem updateAccount(User user, Long id, UpdateAccountRequest request) {
-        Account account = accountRepository.findByIdAndUser(id, user)
+        Account account = accountRepository.findByIdAndFamilyId(id, familyIdOf(user))
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
         if (request.name() != null) {
             if (!request.name().equalsIgnoreCase(account.getName()) &&
-                    accountRepository.existsByUserAndNameIgnoreCaseAndActiveTrue(user, request.name())) {
+                    accountRepository.existsByUser_Families_IdAndNameIgnoreCaseAndActiveTrue(familyIdOf(user), request.name())) {
                 throw new IllegalArgumentException("An account with this name already exists");
             }
             account.setName(request.name());
@@ -110,7 +112,7 @@ public class AccountService {
     }
 
     public void archiveAccount(User user, Long id) {
-        Account account = accountRepository.findByIdAndUser(id, user)
+        Account account = accountRepository.findByIdAndFamilyId(id, familyIdOf(user))
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
         account.setActive(false);
         accountRepository.save(account);
