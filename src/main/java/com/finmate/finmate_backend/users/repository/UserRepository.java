@@ -3,6 +3,7 @@ package com.finmate.finmate_backend.users.repository;
 import com.finmate.finmate_backend.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -12,4 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Check if email already exists
     boolean existsByEmail(String email);
+
+    // Find all users by family ID
+    List<User> findByFamiliesId(Long familyId);
 }

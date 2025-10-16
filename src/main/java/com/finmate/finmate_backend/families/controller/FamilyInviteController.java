@@ -4,7 +4,6 @@ import com.finmate.finmate_backend.auth.dto.ApiResponse;
 import com.finmate.finmate_backend.families.dto.InvitePreviewDto;
 import com.finmate.finmate_backend.families.model.FamilyInvite;
 import com.finmate.finmate_backend.families.service.FamilyInviteService;
-import com.finmate.finmate_backend.users.model.User;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
