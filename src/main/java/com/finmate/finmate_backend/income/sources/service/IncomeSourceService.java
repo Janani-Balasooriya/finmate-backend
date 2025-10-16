@@ -19,8 +19,10 @@ public class IncomeSourceService {
 
     private final IncomeSourceRepository incomeSourceRepository;
 
+    private Long familyIdOf(User user) { return user.getFamilies().getId(); }
+
     public List<IncomeSourceItem> getActive(User user) {
-        return incomeSourceRepository.findActiveByUser(user)
+        return incomeSourceRepository.findActiveByFamilyId(familyIdOf(user))
                 .stream()
                 .map(this::toItem)
                 .toList();
@@ -30,7 +32,7 @@ public class IncomeSourceService {
         if (req.name() == null || req.name().trim().isEmpty()) {
             throw new IllegalArgumentException("Name is required");
         }
-        if (incomeSourceRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, req.name().trim())) {
+        if (incomeSourceRepository.existsByUser_Families_IdAndNameIgnoreCaseAndDeletedFalse(familyIdOf(user), req.name().trim())) {
             throw new IllegalArgumentException("Income source with this name already exists");
         }
 
@@ -48,13 +50,13 @@ public class IncomeSourceService {
     }
 
     public IncomeSourceItem updateIncomeSource(User user, Long id, UpdateIncomeSourceRequest request) {
-        IncomeSource incomeSource = incomeSourceRepository.findByIdAndUser(id, user)
+        IncomeSource incomeSource = incomeSourceRepository.findByIdAndFamilyId(id, familyIdOf(user))
                 .orElseThrow(() -> new IllegalArgumentException("Income source not found"));
 
         if (request.name() != null && !request.name().trim().isEmpty()) {
             String newName = request.name().trim();
             if (!newName.equalsIgnoreCase(incomeSource.getName()) &&
-                    incomeSourceRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, newName)) {
+                    incomeSourceRepository.existsByUser_Families_IdAndNameIgnoreCaseAndDeletedFalse(familyIdOf(user), newName)) {
                 throw new IllegalArgumentException("Income source with this name already exists");
             }
             incomeSource.setName(newName);
@@ -73,7 +75,7 @@ public class IncomeSourceService {
     }
 
     public void deleteIncomeSource(User user, Long id) {
-        IncomeSource incomeSource = incomeSourceRepository.findByIdAndUser(id, user)
+        IncomeSource incomeSource = incomeSourceRepository.findByIdAndFamilyId(id, familyIdOf(user))
                 .orElseThrow(() -> new IllegalArgumentException("Income source not found"));
 
         incomeSource.setDeleted(true);

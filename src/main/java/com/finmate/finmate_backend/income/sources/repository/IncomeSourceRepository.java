@@ -14,8 +14,24 @@ public interface IncomeSourceRepository extends JpaRepository<IncomeSource, Long
     List<IncomeSource> findActiveByUser(User user);
 
     boolean existsByUserAndNameIgnoreCaseAndDeletedFalse(User user, String name);
+Optional<IncomeSource> findByIdAndUser(Long id, User user);
 
-    Optional<IncomeSource> findByIdAndUser(Long id, User user);
+// -------- Family-scoped finders --------
+@Query("""
+select s from IncomeSource s
+where s.user.families.id = :familyId
+and s.deleted = false
+order by s.name asc
+""")
+List<IncomeSource> findActiveByFamilyId(Long familyId);
+
+boolean existsByUser_Families_IdAndNameIgnoreCaseAndDeletedFalse(Long familyId, String name);
+
+@Query("""
+select s from IncomeSource s
+where s.user.families.id = :familyId
+and s.id = :id
+""")
+Optional<IncomeSource> findByIdAndFamilyId(Long id, Long familyId);
 }
-
 
