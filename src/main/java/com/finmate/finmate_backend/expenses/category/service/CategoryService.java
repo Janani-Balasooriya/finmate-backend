@@ -93,7 +93,7 @@ public class CategoryService {
 
     // CategoryItem operations
     public List<CategoryItemDto> getCategoryItems(User user, Long categoryId) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
+        ExpenseCategory category = expenseCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         return categoryItemRepository.findByExpenseCategoryAndDeletedFalseOrderByNameAsc(category)
@@ -103,7 +103,7 @@ public class CategoryService {
     }
 
     public CategoryItemDto createCategoryItem(User user, Long categoryId, CreateCategoryItemRequest request) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
+        ExpenseCategory category = expenseCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = new CategoryItem();

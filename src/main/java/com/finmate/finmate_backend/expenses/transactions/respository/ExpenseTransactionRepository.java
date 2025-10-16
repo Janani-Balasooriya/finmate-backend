@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.expenses.transactions.respository;
 
 import com.finmate.finmate_backend.expenses.transactions.model.ExpenseTransaction;
+import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,6 +22,17 @@ public interface ExpenseTransactionRepository extends JpaRepository<ExpenseTrans
                                                   @Param("categoryId") Long categoryId,
                                                   @Param("start") LocalDate start,
                                                   @Param("end") LocalDate end);
+
+    @Query("select coalesce(sum(et.amount), 0) from ExpenseTransaction et where et.user.families = :family and et.categoryItem.expenseCategory.id = :categoryId and et.transactionDate between :start and :end")
+    BigDecimal sumByFamilyAndCategoryAndDateBetween(@Param("family") Family family,
+                                                    @Param("categoryId") Long categoryId,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end);
+
+    @Query("select coalesce(sum(et.amount), 0) from ExpenseTransaction et where et.user.families = :family and et.transactionDate between :start and :end")
+    BigDecimal sumByFamilyAndDateBetween(@Param("family") Family family,
+                                         @Param("start") LocalDate start,
+                                         @Param("end") LocalDate end);
 }
 
 

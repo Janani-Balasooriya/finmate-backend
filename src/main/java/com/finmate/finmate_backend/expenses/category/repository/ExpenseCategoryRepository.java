@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.expenses.category.repository;
 
 import com.finmate.finmate_backend.expenses.category.model.ExpenseCategory;
+import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,10 @@ import java.util.Optional;
 public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory, Long> {
 
     List<ExpenseCategory> findByUserAndDeletedFalse(User user);
+
+    List<ExpenseCategory> findByUser_FamiliesAndDeletedFalse(Family family);
+
+    List<ExpenseCategory> findAllByUser_Families_IdAndDeletedFalse(Long familyId);
 
     Optional<ExpenseCategory> findByIdAndUser(Long id, User user);
 

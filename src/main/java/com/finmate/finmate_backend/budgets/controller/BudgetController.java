@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -27,6 +28,12 @@ public class BudgetController {
     public ResponseEntity<BudgetResponse> get(Authentication authentication) {
         User user = getUser(authentication);
         return ResponseEntity.ok(budgetService.getBudgetsForCurrentMonth(user));
+    }
+
+    @GetMapping("/family")
+    public ResponseEntity<BudgetResponse> getByFamily(Authentication authentication) {
+        User user = getUser(authentication);
+        return ResponseEntity.ok(budgetService.getBudgetsByFamilyId(user.getFamilies().getId()));
     }
 
     @PostMapping
@@ -52,6 +59,16 @@ public class BudgetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
         User user = getUser(authentication);
+        budgetService.softDelete(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/families/{familyId}/budgets/{id}")
+    public ResponseEntity<Void> deleteByFamily(@PathVariable Long familyId, @PathVariable Long id, Authentication authentication) {
+        User user = getUser(authentication);
+        if (!user.getFamilies().getId().equals(familyId)) {
+            return ResponseEntity.status(403).build();
+        }
         budgetService.softDelete(user, id);
         return ResponseEntity.noContent().build();
     }

@@ -30,11 +30,11 @@ public class BudgetService {
         LocalDate start = now.atDay(1);
         LocalDate end = now.atEndOfMonth();
 
-        List<ExpenseCategory> categories = expenseCategoryRepository.findByUserAndDeletedFalse(user);
+        List<ExpenseCategory> categories = expenseCategoryRepository.findByUser_FamiliesAndDeletedFalse(user.getFamilies());
 
         List<BudgetItem> items = categories.stream().map(cat -> {
             BigDecimal spent = expenseTransactionRepository
-                    .sumByUserAndCategoryAndDateBetween(user, cat.getId(), start, end);
+                    .sumByFamilyAndCategoryAndDateBetween(user.getFamilies(), cat.getId(), start, end);
             BigDecimal budget = cat.getBudgetAmount() == null ? BigDecimal.ZERO : cat.getBudgetAmount();
             BigDecimal remaining = budget.subtract(spent);
             int percent = budget.compareTo(BigDecimal.ZERO) > 0
@@ -49,7 +49,7 @@ public class BudgetService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalSpent = expenseTransactionRepository
-                .sumByUserAndDateBetween(user, start, end);
+                .sumByFamilyAndDateBetween(user.getFamilies(), start, end);
         BigDecimal remaining = totalBudget.subtract(totalSpent);
         int percentUsed = totalBudget.compareTo(BigDecimal.ZERO) > 0
                 ? totalSpent.multiply(BigDecimal.valueOf(100)).divide(totalBudget, 0, java.math.RoundingMode.HALF_UP).intValue()
@@ -94,12 +94,46 @@ public class BudgetService {
 
         // Recompute current month spent
         YearMonth now = YearMonth.now();
-        BigDecimal spent = expenseTransactionRepository.sumByUserAndCategoryAndDateBetween(user, saved.getId(), now.atDay(1), now.atEndOfMonth());
+        BigDecimal spent = expenseTransactionRepository.sumByFamilyAndCategoryAndDateBetween(user.getFamilies(), saved.getId(), now.atDay(1), now.atEndOfMonth());
         BigDecimal remaining = saved.getBudgetAmount().subtract(spent);
         int percent = saved.getBudgetAmount().compareTo(BigDecimal.ZERO) > 0
                 ? spent.multiply(BigDecimal.valueOf(100)).divide(saved.getBudgetAmount(), 0, java.math.RoundingMode.HALF_UP).intValue()
                 : 0;
         return new BudgetItem(saved.getId(), saved.getName(), saved.getIcon(), saved.getColor(), saved.getBudgetAmount(), spent, remaining, percent);
+    }
+
+    public BudgetResponse getBudgetsByFamilyId(Long familyId) {
+        YearMonth now = YearMonth.now();
+        LocalDate start = now.atDay(1);
+        LocalDate end = now.atEndOfMonth();
+
+        List<ExpenseCategory> categories = expenseCategoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
+
+        List<BudgetItem> items = categories.stream().map(cat -> {
+            BigDecimal spent = expenseTransactionRepository
+                    .sumByFamilyAndCategoryAndDateBetween(cat.getUser().getFamilies(), cat.getId(), start, end);
+            BigDecimal budget = cat.getBudgetAmount() == null ? BigDecimal.ZERO : cat.getBudgetAmount();
+            BigDecimal remaining = budget.subtract(spent);
+            int percent = budget.compareTo(BigDecimal.ZERO) > 0
+                    ? spent.multiply(BigDecimal.valueOf(100)).divide(budget, 0, java.math.RoundingMode.HALF_UP).intValue()
+                    : 0;
+            return new BudgetItem(cat.getId(), cat.getName(), cat.getIcon(), cat.getColor(), budget, spent, remaining, percent);
+        }).toList();
+
+        BigDecimal totalBudget = categories.stream()
+                .map(ExpenseCategory::getBudgetAmount)
+                .filter(b -> b != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalSpent = categories.isEmpty() ? BigDecimal.ZERO :
+                expenseTransactionRepository.sumByFamilyAndDateBetween(categories.get(0).getUser().getFamilies(), start, end);
+        BigDecimal remaining = totalBudget.subtract(totalSpent);
+        int percentUsed = totalBudget.compareTo(BigDecimal.ZERO) > 0
+                ? totalSpent.multiply(BigDecimal.valueOf(100)).divide(totalBudget, 0, java.math.RoundingMode.HALF_UP).intValue()
+                : 0;
+
+        BudgetSummary summary = new BudgetSummary(totalBudget, totalSpent, remaining, percentUsed);
+        return new BudgetResponse(summary, items);
     }
 
     public void softDelete(User user, Long id) {
