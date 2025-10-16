@@ -1,8 +1,14 @@
 package com.finmate.finmate_backend.expenses.transactions.service;
 
+import com.finmate.finmate_backend.accounts.model.Account;
+import com.finmate.finmate_backend.accounts.repository.AccountRepository;
+import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
+import com.finmate.finmate_backend.expenses.category.repository.CategoryItemRepository;
 import com.finmate.finmate_backend.expenses.transactions.dto.ExpenseTransactionDtos.*;
 import com.finmate.finmate_backend.expenses.transactions.model.ExpenseTransaction;
 import com.finmate.finmate_backend.expenses.transactions.respository.ExpenseTransactionRepository;
+import com.finmate.finmate_backend.subscriptions.model.Subscription;
+import com.finmate.finmate_backend.subscriptions.repository.SubscriptionRepository;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +29,9 @@ import java.time.LocalDateTime;
 public class ExpenseTransactionService {
 
     private final ExpenseTransactionRepository expenseTransactionRepository;
+    private final AccountRepository accountRepository;
+    private final CategoryItemRepository categoryItemRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     private Long familyIdOf(User user) { return user.getFamilies().getId(); }
 
@@ -71,8 +80,51 @@ public class ExpenseTransactionService {
     }
 
     public ExpenseTransactionItem create(User user, CreateExpenseTransactionRequest req) {
-        // TODO: Implement validation and creation
-        throw new UnsupportedOperationException("Not implemented yet");
+        Long familyId = familyIdOf(user);
+
+        // Validate required fields
+        if (req.amount() == null || req.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+        if (req.transactionDate() == null) {
+            throw new IllegalArgumentException("Transaction date is required");
+        }
+        if (req.accountId() == null) {
+            throw new IllegalArgumentException("Account ID is required");
+        }
+        if (req.categoryItemId() == null) {
+            throw new IllegalArgumentException("Category item ID is required");
+        }
+
+        // Find and validate account belongs to family
+        Account account = accountRepository.findByIdAndFamilyId(req.accountId(), familyId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to your family"));
+
+        // Find and validate category item belongs to family
+        CategoryItem categoryItem = categoryItemRepository.findById(req.categoryItemId())
+                .orElseThrow(() -> new IllegalArgumentException("Category item not found"));
+        if (!categoryItem.getExpenseCategory().getUser().getFamilies().getId().equals(familyId)) {
+            throw new IllegalArgumentException("Category item does not belong to your family");
+        }
+
+        // Find subscription if provided
+        Subscription subscription = null;
+        if (req.subscriptionId() != null) {
+            subscription = subscriptionRepository.findByIdAndFamilyId(req.subscriptionId(), familyId)
+                    .orElseThrow(() -> new IllegalArgumentException("Subscription not found or does not belong to your family"));
+        }
+
+        // Create and save transaction
+        ExpenseTransaction transaction = new ExpenseTransaction();
+        transaction.setAmount(req.amount());
+        transaction.setTransactionDate(req.transactionDate());
+        transaction.setAccount(account);
+        transaction.setCategoryItem(categoryItem);
+        transaction.setUser(user);
+        transaction.setSubscription(subscription);
+
+        ExpenseTransaction saved = expenseTransactionRepository.save(transaction);
+        return toItem(saved);
     }
 
     public ExpenseTransactionItem update(User user, Long id, UpdateExpenseTransactionRequest req) {
