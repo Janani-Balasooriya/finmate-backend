@@ -24,6 +24,8 @@ public class BudgetController {
         return authService.getCurrentUser(email);
     }
 
+    private Long familyIdOf(User user) { return user.getFamilies().getId(); }
+
     @GetMapping
     public ResponseEntity<BudgetResponse> get(Authentication authentication) {
         User user = getUser(authentication);
@@ -31,13 +33,24 @@ public class BudgetController {
     }
 
     @GetMapping("/family")
-    public ResponseEntity<BudgetResponse> getByFamily(Authentication authentication) {
+    public ResponseEntity<BudgetResponse> getFamilyBudgets(Authentication authentication) {
         User user = getUser(authentication);
-        return ResponseEntity.ok(budgetService.getBudgetsByFamilyId(user.getFamilies().getId()));
+        Long familyId = familyIdOf(user);
+        return ResponseEntity.ok(budgetService.getBudgetsForFamilyCurrentMonth(familyId));
     }
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
+        User user = getUser(authentication);
+        try {
+            return ResponseEntity.ok(budgetService.create(user, req));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/family")
+    public ResponseEntity<?> createForFamily(@RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
         User user = getUser(authentication);
         try {
             return ResponseEntity.ok(budgetService.create(user, req));
@@ -56,8 +69,25 @@ public class BudgetController {
         }
     }
 
+    @PutMapping("/family/{id}")
+    public ResponseEntity<?> updateForFamily(@PathVariable Long id, @RequestBody CreateOrUpdateBudgetRequest req, Authentication authentication) {
+        User user = getUser(authentication);
+        try {
+            return ResponseEntity.ok(budgetService.update(user, id, req));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
+        User user = getUser(authentication);
+        budgetService.softDelete(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/family/{id}")
+    public ResponseEntity<Void> deleteForFamily(@PathVariable Long id, Authentication authentication) {
         User user = getUser(authentication);
         budgetService.softDelete(user, id);
         return ResponseEntity.noContent().build();

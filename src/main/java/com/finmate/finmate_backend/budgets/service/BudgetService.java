@@ -102,7 +102,7 @@ public class BudgetService {
         return new BudgetItem(saved.getId(), saved.getName(), saved.getIcon(), saved.getColor(), saved.getBudgetAmount(), spent, remaining, percent);
     }
 
-    public BudgetResponse getBudgetsByFamilyId(Long familyId) {
+    public BudgetResponse getBudgetsForFamilyCurrentMonth(Long familyId) {
         YearMonth now = YearMonth.now();
         LocalDate start = now.atDay(1);
         LocalDate end = now.atEndOfMonth();
