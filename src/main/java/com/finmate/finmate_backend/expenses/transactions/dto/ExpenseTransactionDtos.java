@@ -17,8 +17,10 @@ public class ExpenseTransactionDtos {
             Long accountId,
             String accountName,
 
-            Long categoryItemId,
+            Long categoryId,
             String categoryName,
+            Long categoryItemId,
+            String categoryItemName,
             String categoryColor,   // e.g. "bg-orange-500" or hex; adjust to your data
 
             Long subscriptionId,    // may be null

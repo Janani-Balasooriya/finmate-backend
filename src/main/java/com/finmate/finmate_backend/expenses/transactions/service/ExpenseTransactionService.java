@@ -170,6 +170,8 @@ public class ExpenseTransactionService {
             transaction.getTransactionDate(),
             transaction.getAccount().getId(),
             transaction.getAccount().getName(),
+            transaction.getCategoryItem().getExpenseCategory().getId(),
+            transaction.getCategoryItem().getExpenseCategory().getName(),
             transaction.getCategoryItem().getId(),
             transaction.getCategoryItem().getName(),
             transaction.getCategoryItem().getExpenseCategory().getColor(),
