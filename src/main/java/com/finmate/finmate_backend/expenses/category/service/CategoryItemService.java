@@ -1,10 +1,10 @@
 package com.finmate.finmate_backend.expenses.category.service;
 
-import com.finmate.finmate_backend.expenses.category.dto.ExpenseCategoryDtos.*;
+import com.finmate.finmate_backend.expenses.category.dto.CategoryItemDtos.*;
 import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
-import com.finmate.finmate_backend.expenses.category.model.ExpenseCategory;
+import com.finmate.finmate_backend.expenses.category.model.Category;
 import com.finmate.finmate_backend.expenses.category.repository.CategoryItemRepository;
-import com.finmate.finmate_backend.expenses.category.repository.ExpenseCategoryRepository;
+import com.finmate.finmate_backend.expenses.category.repository.CategoryRepository;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,14 @@ import java.util.List;
 @Transactional
 public class ExpenseCategoryService {
 
-    private final ExpenseCategoryRepository expenseCategoryRepository;
+    private final CategoryRepository expenseCategoryRepository;
     private final CategoryItemRepository categoryItemRepository;
 
     private Long familyIdOf(User user) { return user.getFamilies().getId(); }
 
     public List<CategorySummary> getCategories(User user) {
         Long familyId = familyIdOf(user);
-        List<ExpenseCategory> categories = expenseCategoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
+        List<Category> categories = expenseCategoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
         return categories.stream().map(cat -> new CategorySummary(cat.getId(), cat.getName())).toList();
     }
 

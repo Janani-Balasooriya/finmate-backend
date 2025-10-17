@@ -1,7 +1,7 @@
 package com.finmate.finmate_backend.expenses.category.controller;
 
 import com.finmate.finmate_backend.auth.service.AuthService;
-import com.finmate.finmate_backend.expenses.category.dto.ExpenseCategoryDtos.*;
+import com.finmate.finmate_backend.expenses.category.dto.CategoryItemDtos.*;
 import com.finmate.finmate_backend.expenses.category.service.ExpenseCategoryService;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
