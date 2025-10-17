@@ -24,5 +24,5 @@ public class CategoryItem {
     // FK: category_items.expense_categories_id → expense_categories.id
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "expense_categories_id", nullable = false)
-    private ExpenseCategory expenseCategory;
+    private Category expenseCategory;
 }

@@ -4,8 +4,8 @@ import com.finmate.finmate_backend.budgets.dto.BudgetDtos.BudgetItem;
 import com.finmate.finmate_backend.budgets.dto.BudgetDtos.BudgetResponse;
 import com.finmate.finmate_backend.budgets.dto.BudgetDtos.BudgetSummary;
 import com.finmate.finmate_backend.budgets.dto.BudgetDtos.CreateOrUpdateBudgetRequest;
-import com.finmate.finmate_backend.expenses.category.model.ExpenseCategory;
-import com.finmate.finmate_backend.expenses.category.repository.ExpenseCategoryRepository;
+import com.finmate.finmate_backend.expenses.category.model.Category;
+import com.finmate.finmate_backend.expenses.category.repository.CategoryRepository;
 import com.finmate.finmate_backend.expenses.transactions.respository.ExpenseTransactionRepository;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.List;
 @Transactional
 public class BudgetService {
 
-    private final ExpenseCategoryRepository expenseCategoryRepository;
+    private final CategoryRepository expenseCategoryRepository;
     private final ExpenseTransactionRepository expenseTransactionRepository;
 
     public BudgetResponse getBudgetsForCurrentMonth(User user) {
@@ -30,7 +30,7 @@ public class BudgetService {
         LocalDate start = now.atDay(1);
         LocalDate end = now.atEndOfMonth();
 
-        List<ExpenseCategory> categories = expenseCategoryRepository.findByUser_FamiliesAndDeletedFalse(user.getFamilies());
+        List<Category> categories = expenseCategoryRepository.findByUser_FamiliesAndDeletedFalse(user.getFamilies());
 
         List<BudgetItem> items = categories.stream().map(cat -> {
             BigDecimal spent = expenseTransactionRepository
@@ -44,7 +44,7 @@ public class BudgetService {
         }).toList();
 
         BigDecimal totalBudget = categories.stream()
-                .map(ExpenseCategory::getBudgetAmount)
+                .map(Category::getBudgetAmount)
                 .filter(b -> b != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -63,21 +63,21 @@ public class BudgetService {
         if (expenseCategoryRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, req.name())) {
             throw new IllegalArgumentException("A budget category with this name already exists");
         }
-        ExpenseCategory category = new ExpenseCategory();
+        Category category = new Category();
         category.setUser(user);
         category.setName(req.name());
         category.setIcon(req.icon());
         category.setColor(req.color());
         category.setBudgetAmount(req.budgetAmount() == null ? BigDecimal.ZERO : req.budgetAmount());
         category.setDeleted(false);
-        ExpenseCategory saved = expenseCategoryRepository.save(category);
+        Category saved = expenseCategoryRepository.save(category);
 
         // Fresh item with zero spent for current month
         return new BudgetItem(saved.getId(), saved.getName(), saved.getIcon(), saved.getColor(), saved.getBudgetAmount(), BigDecimal.ZERO, saved.getBudgetAmount(), 0);
     }
 
     public BudgetItem update(User user, Long id, CreateOrUpdateBudgetRequest req) {
-        ExpenseCategory category = expenseCategoryRepository.findById(id)
+        Category category = expenseCategoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Budget category not found"));
         if (req.name() != null) {
             String newName = req.name();
@@ -90,7 +90,7 @@ public class BudgetService {
         if (req.icon() != null) category.setIcon(req.icon());
         if (req.color() != null) category.setColor(req.color());
         if (req.budgetAmount() != null) category.setBudgetAmount(req.budgetAmount());
-        ExpenseCategory saved = expenseCategoryRepository.save(category);
+        Category saved = expenseCategoryRepository.save(category);
 
         // Recompute current month spent
         YearMonth now = YearMonth.now();
@@ -107,7 +107,7 @@ public class BudgetService {
         LocalDate start = now.atDay(1);
         LocalDate end = now.atEndOfMonth();
 
-        List<ExpenseCategory> categories = expenseCategoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
+        List<Category> categories = expenseCategoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
 
         List<BudgetItem> items = categories.stream().map(cat -> {
             BigDecimal spent = expenseTransactionRepository
@@ -121,7 +121,7 @@ public class BudgetService {
         }).toList();
 
         BigDecimal totalBudget = categories.stream()
-                .map(ExpenseCategory::getBudgetAmount)
+                .map(Category::getBudgetAmount)
                 .filter(b -> b != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -137,7 +137,7 @@ public class BudgetService {
     }
 
     public void softDelete(User user, Long id) {
-        ExpenseCategory category = expenseCategoryRepository.findById(id)
+        Category category = expenseCategoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Budget category not found"));
         category.setDeleted(true);
         expenseCategoryRepository.save(category);

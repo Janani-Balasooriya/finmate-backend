@@ -2,7 +2,7 @@ package com.finmate.finmate_backend.expenses.category.controller;
 
 import com.finmate.finmate_backend.auth.service.AuthService;
 import com.finmate.finmate_backend.expenses.category.dto.CategoryItemDtos.*;
-import com.finmate.finmate_backend.expenses.category.service.ExpenseCategoryService;
+import com.finmate.finmate_backend.expenses.category.service.CategoryItemService;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +17,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/expense-categories")
 @RequiredArgsConstructor
-public class ExpenseCategoryController {
+public class CategoryItemController {
 
-    private final ExpenseCategoryService expenseCategoryService;
+    private final CategoryItemService expenseCategoryService;
     private final AuthService authService;
 
     private User getUser(Authentication authentication) {

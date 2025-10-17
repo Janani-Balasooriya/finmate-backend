@@ -1,6 +1,6 @@
 package com.finmate.finmate_backend.expenses.category.dto;
 
-public class ExpenseCategoryDtos {
+public class CategoryItemDtos {
 
     public record CategorySummary(
         Long id,

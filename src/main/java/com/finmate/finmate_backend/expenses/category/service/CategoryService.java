@@ -2,9 +2,9 @@ package com.finmate.finmate_backend.expenses.category.service;
 
 import com.finmate.finmate_backend.expenses.category.dto.CategoryDtos.*;
 import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
-import com.finmate.finmate_backend.expenses.category.model.ExpenseCategory;
+import com.finmate.finmate_backend.expenses.category.model.Category;
 import com.finmate.finmate_backend.expenses.category.repository.CategoryItemRepository;
-import com.finmate.finmate_backend.expenses.category.repository.ExpenseCategoryRepository;
+import com.finmate.finmate_backend.expenses.category.repository.CategoryRepository;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.List;
 @Transactional
 public class CategoryService {
 
-    private final ExpenseCategoryRepository expenseCategoryRepository;
+    private final CategoryRepository expenseCategoryRepository;
     private final CategoryItemRepository categoryItemRepository;
 
     // ExpenseCategory operations
@@ -40,7 +40,7 @@ public class CategoryService {
             throw new IllegalArgumentException("A category with this name already exists");
         }
 
-        ExpenseCategory category = new ExpenseCategory();
+        Category category = new Category();
         category.setUser(user);
         category.setName(request.name());
         category.setIcon(request.icon());
@@ -48,7 +48,7 @@ public class CategoryService {
         category.setBudgetAmount(request.budgetAmount() != null ? request.budgetAmount() : BigDecimal.ZERO);
         category.setDeleted(false);
 
-        ExpenseCategory saved = expenseCategoryRepository.save(category);
+        Category saved = expenseCategoryRepository.save(category);
         return new ExpenseCategoryDto(
                 saved.getId(),
                 saved.getName(),
@@ -59,7 +59,7 @@ public class CategoryService {
     }
 
     public ExpenseCategoryDto updateCategory(User user, Long id, UpdateCategoryRequest request) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(id, user)
+        Category category = expenseCategoryRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         if (request.name() != null) {
@@ -74,7 +74,7 @@ public class CategoryService {
         if (request.color() != null) category.setColor(request.color());
         if (request.budgetAmount() != null) category.setBudgetAmount(request.budgetAmount());
 
-        ExpenseCategory saved = expenseCategoryRepository.save(category);
+        Category saved = expenseCategoryRepository.save(category);
         return new ExpenseCategoryDto(
                 saved.getId(),
                 saved.getName(),
@@ -85,7 +85,7 @@ public class CategoryService {
     }
 
     public void deleteCategory(User user, Long id) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(id, user)
+        Category category = expenseCategoryRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
         category.setDeleted(true);
         expenseCategoryRepository.save(category);
@@ -93,7 +93,7 @@ public class CategoryService {
 
     // CategoryItem operations
     public List<CategoryItemDto> getCategoryItems(User user, Long categoryId) {
-        ExpenseCategory category = expenseCategoryRepository.findById(categoryId)
+        Category category = expenseCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         return categoryItemRepository.findByExpenseCategoryAndDeletedFalseOrderByNameAsc(category)
@@ -103,7 +103,7 @@ public class CategoryService {
     }
 
     public CategoryItemDto createCategoryItem(User user, Long categoryId, CreateCategoryItemRequest request) {
-        ExpenseCategory category = expenseCategoryRepository.findById(categoryId)
+        Category category = expenseCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = new CategoryItem();
@@ -116,7 +116,7 @@ public class CategoryService {
     }
 
     public CategoryItemDto updateCategoryItem(User user, Long categoryId, Long itemId, UpdateCategoryItemRequest request) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
+        Category category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = categoryItemRepository.findById(itemId)
@@ -129,7 +129,7 @@ public class CategoryService {
     }
 
     public void deleteCategoryItem(User user, Long categoryId, Long itemId) {
-        ExpenseCategory category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
+        Category category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = categoryItemRepository.findById(itemId)
