@@ -128,8 +128,53 @@ public class ExpenseTransactionService {
     }
 
     public ExpenseTransactionItem update(User user, Long id, UpdateExpenseTransactionRequest req) {
-        // TODO: Implement validation and update
-        throw new UnsupportedOperationException("Not implemented yet");
+        Long familyId = familyIdOf(user);
+
+        // Find existing transaction
+        ExpenseTransaction transaction = expenseTransactionRepository.findByFamilyAndId(familyId, id)
+                .orElseThrow(() -> new IllegalArgumentException("Expense transaction not found"));
+
+        // Validate required fields
+        if (req.amount() != null && req.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+        if (req.transactionDate() == null) {
+            throw new IllegalArgumentException("Transaction date is required");
+        }
+        if (req.accountId() == null) {
+            throw new IllegalArgumentException("Account ID is required");
+        }
+        if (req.categoryItemId() == null) {
+            throw new IllegalArgumentException("Category item ID is required");
+        }
+
+        // Find and validate account belongs to family
+        Account account = accountRepository.findByIdAndFamilyId(req.accountId(), familyId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to your family"));
+
+        // Find and validate category item belongs to family
+        CategoryItem categoryItem = categoryItemRepository.findById(req.categoryItemId())
+                .orElseThrow(() -> new IllegalArgumentException("Category item not found"));
+        if (!categoryItem.getExpenseCategory().getUser().getFamilies().getId().equals(familyId)) {
+            throw new IllegalArgumentException("Category item does not belong to your family");
+        }
+
+        // Find subscription if provided
+        Subscription subscription = null;
+        if (req.subscriptionId() != null) {
+            subscription = subscriptionRepository.findByIdAndFamilyId(req.subscriptionId(), familyId)
+                    .orElseThrow(() -> new IllegalArgumentException("Subscription not found or does not belong to your family"));
+        }
+
+        // Update transaction
+        if (req.amount() != null) transaction.setAmount(req.amount());
+        if (req.transactionDate() != null) transaction.setTransactionDate(req.transactionDate());
+        if (req.accountId() != null) transaction.setAccount(account);
+        if (req.categoryItemId() != null) transaction.setCategoryItem(categoryItem);
+        if (req.subscriptionId() != null) transaction.setSubscription(subscription);
+
+        ExpenseTransaction saved = expenseTransactionRepository.save(transaction);
+        return toItem(saved);
     }
 
     public void delete(User user, Long id) {
