@@ -40,4 +40,11 @@ public class DashboardController {
         IncomeExpenseTrend trend = dashboardService.getIncomeExpenseTrend(user, year);
         return ResponseEntity.ok(trend);
     }
+
+    @GetMapping("/budget-comparison")
+    public ResponseEntity<BudgetComparison> getBudgetComparison(Authentication authentication) {
+        User user = getUser(authentication);
+        BudgetComparison comparison = dashboardService.getBudgetComparison(user);
+        return ResponseEntity.ok(comparison);
+    }
 }

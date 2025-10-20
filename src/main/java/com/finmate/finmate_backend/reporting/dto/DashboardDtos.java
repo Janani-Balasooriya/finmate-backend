@@ -18,6 +18,17 @@ public class DashboardDtos {
             BigDecimal expenses
     ) {}
 
+    public record BudgetComparisonData(
+            String category,
+            java.math.BigDecimal budget,
+            java.math.BigDecimal actual,
+            String status
+    ) {}
+
+    public record BudgetComparison(
+            java.util.List<BudgetComparisonData> data
+    ) {}
+
     public record IncomeExpenseTrend(
             java.util.List<MonthlyTrendData> data
     ) {}

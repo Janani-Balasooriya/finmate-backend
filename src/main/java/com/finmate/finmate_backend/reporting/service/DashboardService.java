@@ -1,5 +1,7 @@
 package com.finmate.finmate_backend.reporting.service;
 
+import com.finmate.finmate_backend.expenses.category.model.Category;
+import com.finmate.finmate_backend.expenses.category.repository.CategoryRepository;
 import com.finmate.finmate_backend.expenses.transactions.respository.ExpenseTransactionRepository;
 import com.finmate.finmate_backend.income.transactions.repository.IncomeTransactionRepository;
 import com.finmate.finmate_backend.reporting.dto.DashboardDtos.*;
@@ -21,6 +23,7 @@ public class DashboardService {
 
     private final IncomeTransactionRepository incomeTransactionRepository;
     private final ExpenseTransactionRepository expenseTransactionRepository;
+    private final CategoryRepository categoryRepository;
 
     public DashboardStats getDashboardStats(User user) {
         Long familyId = user.getFamilies().getId();
@@ -73,5 +76,40 @@ public class DashboardService {
         }
 
         return new IncomeExpenseTrend(trendData);
+    }
+
+    public BudgetComparison getBudgetComparison(User user) {
+        Long familyId = user.getFamilies().getId();
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate startOfMonth = currentMonth.atDay(1);
+        LocalDate endOfMonth = currentMonth.atEndOfMonth();
+
+        List<Category> categories = categoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
+        List<BudgetComparisonData> comparisonData = new ArrayList<>();
+
+        for (Category category : categories) {
+            BigDecimal budget = category.getBudgetAmount();
+            BigDecimal actual = expenseTransactionRepository.sumByFamilyAndCategoryAndDateBetween(
+                    categoryRepository.findById(category.getId()).orElseThrow().getUser().getFamilies(),
+                    category.getId(), startOfMonth, endOfMonth);
+
+            String status;
+            if (actual.compareTo(budget) > 0) {
+                status = "over";
+            } else if (actual.compareTo(budget) < 0) {
+                status = "under";
+            } else {
+                status = "exact";
+            }
+
+            comparisonData.add(new BudgetComparisonData(
+                    category.getName(),
+                    budget,
+                    actual,
+                    status
+            ));
+        }
+
+        return new BudgetComparison(comparisonData);
     }
 }
