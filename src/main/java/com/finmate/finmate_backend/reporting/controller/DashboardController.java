@@ -56,4 +56,13 @@ public class DashboardController {
         CashFlowAnalysis analysis = dashboardService.getCashFlowAnalysis(user, year);
         return ResponseEntity.ok(analysis);
     }
+
+    @GetMapping("/category-trends")
+    public ResponseEntity<CategoryTrends> getCategoryTrends(
+            @RequestParam(defaultValue = "#{T(java.time.Year).now().value}") int year,
+            Authentication authentication) {
+        User user = getUser(authentication);
+        CategoryTrends trends = dashboardService.getCategoryTrends(user, year);
+        return ResponseEntity.ok(trends);
+    }
 }

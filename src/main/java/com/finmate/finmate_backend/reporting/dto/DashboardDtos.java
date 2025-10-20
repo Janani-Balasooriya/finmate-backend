@@ -39,6 +39,16 @@ public class DashboardDtos {
             java.util.List<CashFlowData> data
     ) {}
 
+    public record CategoryTrendData(
+            String month,
+            java.util.Map<String, java.math.BigDecimal> categories
+    ) {}
+
+    public record CategoryTrends(
+            java.util.List<CategoryTrendData> data,
+            java.util.List<String> categoryNames
+    ) {}
+
     public record IncomeExpenseTrend(
             java.util.List<MonthlyTrendData> data
     ) {}

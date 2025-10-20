@@ -137,4 +137,32 @@ public class DashboardService {
 
         return new CashFlowAnalysis(cashFlowData);
     }
+
+    public CategoryTrends getCategoryTrends(User user, int year) {
+        Long familyId = user.getFamilies().getId();
+        List<Category> categories = categoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
+        List<CategoryTrendData> trendData = new ArrayList<>();
+        List<String> categoryNames = categories.stream().map(Category::getName).toList();
+
+        for (int month = 1; month <= 12; month++) {
+            YearMonth yearMonth = YearMonth.of(year, month);
+            LocalDate startOfMonth = yearMonth.atDay(1);
+            LocalDate endOfMonth = yearMonth.atEndOfMonth();
+
+            java.util.Map<String, BigDecimal> monthlyCategories = new java.util.HashMap<>();
+            for (Category category : categories) {
+                BigDecimal spending = expenseTransactionRepository.sumByFamilyAndCategoryAndDateBetween(
+                        category.getUser().getFamilies(),
+                        category.getId(),
+                        startOfMonth,
+                        endOfMonth);
+                monthlyCategories.put(category.getName(), spending);
+            }
+
+            String monthName = yearMonth.getMonth().name().substring(0, 3);
+            trendData.add(new CategoryTrendData(monthName, monthlyCategories));
+        }
+
+        return new CategoryTrends(trendData, categoryNames);
+    }
 }
