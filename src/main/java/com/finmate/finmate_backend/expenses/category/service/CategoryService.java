@@ -23,7 +23,8 @@ public class CategoryService {
 
     // ExpenseCategory operations
     public List<ExpenseCategoryDto> getActiveCategories(User user) {
-        return expenseCategoryRepository.findByUserAndDeletedFalse(user)
+        Long familyId = user.getFamilies().getId();
+        return expenseCategoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId)
                 .stream()
                 .map(category -> new ExpenseCategoryDto(
                         category.getId(),
@@ -36,7 +37,8 @@ public class CategoryService {
     }
 
     public ExpenseCategoryDto createCategory(User user, CreateCategoryRequest request) {
-        if (expenseCategoryRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, request.name())) {
+        Long familyId = user.getFamilies().getId();
+        if (expenseCategoryRepository.existsByUser_Families_IdAndNameIgnoreCaseAndDeletedFalse(familyId, request.name())) {
             throw new IllegalArgumentException("A category with this name already exists");
         }
 
@@ -59,12 +61,13 @@ public class CategoryService {
     }
 
     public ExpenseCategoryDto updateCategory(User user, Long id, UpdateCategoryRequest request) {
-        Category category = expenseCategoryRepository.findByIdAndUser(id, user)
+        Long familyId = user.getFamilies().getId();
+        Category category = expenseCategoryRepository.findByIdAndUser_Families_Id(id, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         if (request.name() != null) {
             if (!request.name().equalsIgnoreCase(category.getName()) &&
-                    expenseCategoryRepository.existsByUserAndNameIgnoreCaseAndDeletedFalse(user, request.name())) {
+                    expenseCategoryRepository.existsByUser_Families_IdAndNameIgnoreCaseAndDeletedFalse(familyId, request.name())) {
                 throw new IllegalArgumentException("A category with this name already exists");
             }
             category.setName(request.name());
@@ -85,7 +88,8 @@ public class CategoryService {
     }
 
     public void deleteCategory(User user, Long id) {
-        Category category = expenseCategoryRepository.findByIdAndUser(id, user)
+        Long familyId = user.getFamilies().getId();
+        Category category = expenseCategoryRepository.findByIdAndUser_Families_Id(id, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
         category.setDeleted(true);
         expenseCategoryRepository.save(category);
@@ -93,7 +97,8 @@ public class CategoryService {
 
     // CategoryItem operations
     public List<CategoryItemDto> getCategoryItems(User user, Long categoryId) {
-        Category category = expenseCategoryRepository.findById(categoryId)
+        Long familyId = user.getFamilies().getId();
+        Category category = expenseCategoryRepository.findByIdAndUser_Families_Id(categoryId, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         return categoryItemRepository.findByExpenseCategoryAndDeletedFalseOrderByNameAsc(category)
@@ -103,7 +108,8 @@ public class CategoryService {
     }
 
     public CategoryItemDto createCategoryItem(User user, Long categoryId, CreateCategoryItemRequest request) {
-        Category category = expenseCategoryRepository.findById(categoryId)
+        Long familyId = user.getFamilies().getId();
+        Category category = expenseCategoryRepository.findByIdAndUser_Families_Id(categoryId, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = new CategoryItem();
@@ -116,7 +122,8 @@ public class CategoryService {
     }
 
     public CategoryItemDto updateCategoryItem(User user, Long categoryId, Long itemId, UpdateCategoryItemRequest request) {
-        Category category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
+        Long familyId = user.getFamilies().getId();
+        Category category = expenseCategoryRepository.findByIdAndUser_Families_Id(categoryId, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = categoryItemRepository.findById(itemId)
@@ -129,7 +136,8 @@ public class CategoryService {
     }
 
     public void deleteCategoryItem(User user, Long categoryId, Long itemId) {
-        Category category = expenseCategoryRepository.findByIdAndUser(categoryId, user)
+        Long familyId = user.getFamilies().getId();
+        Category category = expenseCategoryRepository.findByIdAndUser_Families_Id(categoryId, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         CategoryItem item = categoryItemRepository.findById(itemId)

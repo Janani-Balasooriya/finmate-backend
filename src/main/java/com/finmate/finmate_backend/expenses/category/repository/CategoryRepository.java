@@ -18,12 +18,12 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     List<Category> findAllByUser_Families_IdAndDeletedFalse(Long familyId);
 
-    Optional<Category> findByIdAndUser(Long id, User user);
+    Optional<Category> findByIdAndUser_Families_Id(Long id, Long familyId);
 
-    @Query("select coalesce(sum(ec.budgetAmount), 0) from Category ec where ec.user = :user and ec.deleted = false")
-    java.math.BigDecimal sumActiveBudgetsByUser(@Param("user") User user);
+    @Query("select coalesce(sum(ec.budgetAmount), 0) from Category ec where ec.user.families.id = :familyId and ec.deleted = false")
+    java.math.BigDecimal sumActiveBudgetsByFamilyId(@Param("familyId") Long familyId);
 
-    boolean existsByUserAndNameIgnoreCaseAndDeletedFalse(User user, String name);
+    boolean existsByUser_Families_IdAndNameIgnoreCaseAndDeletedFalse(Long familyId, String name);
 }
 
 
