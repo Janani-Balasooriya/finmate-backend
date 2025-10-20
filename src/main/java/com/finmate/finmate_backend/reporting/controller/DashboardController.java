@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,5 +30,14 @@ public class DashboardController {
         User user = getUser(authentication);
         DashboardStats stats = dashboardService.getDashboardStats(user);
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/income-expense-trend")
+    public ResponseEntity<IncomeExpenseTrend> getIncomeExpenseTrend(
+            @RequestParam(defaultValue = "#{T(java.time.Year).now().value}") int year,
+            Authentication authentication) {
+        User user = getUser(authentication);
+        IncomeExpenseTrend trend = dashboardService.getIncomeExpenseTrend(user, year);
+        return ResponseEntity.ok(trend);
     }
 }

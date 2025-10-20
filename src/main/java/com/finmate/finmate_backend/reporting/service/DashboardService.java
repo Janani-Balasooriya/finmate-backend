@@ -11,6 +11,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -49,5 +52,26 @@ public class DashboardService {
                 netSavings,
                 savingsRate
         );
+    }
+
+    public IncomeExpenseTrend getIncomeExpenseTrend(User user, int year) {
+        Long familyId = user.getFamilies().getId();
+        List<MonthlyTrendData> trendData = new ArrayList<>();
+
+        for (int month = 1; month <= 12; month++) {
+            YearMonth yearMonth = YearMonth.of(year, month);
+            LocalDate startOfMonth = yearMonth.atDay(1);
+            LocalDate endOfMonth = yearMonth.atEndOfMonth();
+
+            BigDecimal monthlyIncome = incomeTransactionRepository.getTotalAmountByFamilyAndDateRange(
+                    familyId, startOfMonth, endOfMonth);
+            BigDecimal monthlyExpenses = expenseTransactionRepository.getTotalAmountByFamilyAndDateRange(
+                    familyId, startOfMonth, endOfMonth);
+
+            String monthName = yearMonth.getMonth().name().substring(0, 3);
+            trendData.add(new MonthlyTrendData(monthName, monthlyIncome, monthlyExpenses));
+        }
+
+        return new IncomeExpenseTrend(trendData);
     }
 }
