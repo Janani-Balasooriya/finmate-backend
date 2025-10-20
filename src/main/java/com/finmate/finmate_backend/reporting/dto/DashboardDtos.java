@@ -49,6 +49,16 @@ public class DashboardDtos {
             java.util.List<String> categoryNames
     ) {}
 
+    public record SpendingByCategoryData(
+            String categoryName,
+            java.math.BigDecimal amount,
+            java.math.BigDecimal percentage
+    ) {}
+
+    public record SpendingByCategory(
+            java.util.List<SpendingByCategoryData> data
+    ) {}
+
     public record IncomeExpenseTrend(
             java.util.List<MonthlyTrendData> data
     ) {}

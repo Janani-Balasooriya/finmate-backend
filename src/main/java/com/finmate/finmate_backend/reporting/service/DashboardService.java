@@ -165,4 +165,48 @@ public class DashboardService {
 
         return new CategoryTrends(trendData, categoryNames);
     }
+
+    public SpendingByCategory getSpendingByCategory(User user) {
+        Long familyId = user.getFamilies().getId();
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate startOfMonth = currentMonth.atDay(1);
+        LocalDate endOfMonth = currentMonth.atEndOfMonth();
+
+        List<Category> categories = categoryRepository.findAllByUser_Families_IdAndDeletedFalse(familyId);
+        List<SpendingByCategoryData> spendingData = new ArrayList<>();
+
+        // Calculate total spending for the month
+        BigDecimal totalSpending = BigDecimal.ZERO;
+        for (Category category : categories) {
+            BigDecimal categorySpending = expenseTransactionRepository.sumByFamilyAndCategoryAndDateBetween(
+                    category.getUser().getFamilies(),
+                    category.getId(),
+                    startOfMonth,
+                    endOfMonth);
+            totalSpending = totalSpending.add(categorySpending);
+        }
+
+        // Calculate percentage for each category
+        for (Category category : categories) {
+            BigDecimal categorySpending = expenseTransactionRepository.sumByFamilyAndCategoryAndDateBetween(
+                    category.getUser().getFamilies(),
+                    category.getId(),
+                    startOfMonth,
+                    endOfMonth);
+
+            BigDecimal percentage = BigDecimal.ZERO;
+            if (totalSpending.compareTo(BigDecimal.ZERO) > 0) {
+                percentage = categorySpending.divide(totalSpending, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+            }
+
+            spendingData.add(new SpendingByCategoryData(
+                    category.getName(),
+                    categorySpending,
+                    percentage
+            ));
+        }
+
+        return new SpendingByCategory(spendingData);
+    }
 }

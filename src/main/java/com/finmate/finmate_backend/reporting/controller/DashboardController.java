@@ -65,4 +65,11 @@ public class DashboardController {
         CategoryTrends trends = dashboardService.getCategoryTrends(user, year);
         return ResponseEntity.ok(trends);
     }
+
+    @GetMapping("/spending-by-category")
+    public ResponseEntity<SpendingByCategory> getSpendingByCategory(Authentication authentication) {
+        User user = getUser(authentication);
+        SpendingByCategory spending = dashboardService.getSpendingByCategory(user);
+        return ResponseEntity.ok(spending);
+    }
 }
