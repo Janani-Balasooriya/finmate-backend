@@ -112,4 +112,29 @@ public class DashboardService {
 
         return new BudgetComparison(comparisonData);
     }
+
+    public CashFlowAnalysis getCashFlowAnalysis(User user, int year) {
+        Long familyId = user.getFamilies().getId();
+        List<CashFlowData> cashFlowData = new ArrayList<>();
+        BigDecimal cumulative = BigDecimal.ZERO;
+
+        for (int month = 1; month <= 12; month++) {
+            YearMonth yearMonth = YearMonth.of(year, month);
+            LocalDate startOfMonth = yearMonth.atDay(1);
+            LocalDate endOfMonth = yearMonth.atEndOfMonth();
+
+            BigDecimal monthlyIncome = incomeTransactionRepository.getTotalAmountByFamilyAndDateRange(
+                    familyId, startOfMonth, endOfMonth);
+            BigDecimal monthlyExpenses = expenseTransactionRepository.getTotalAmountByFamilyAndDateRange(
+                    familyId, startOfMonth, endOfMonth);
+
+            BigDecimal cashFlow = monthlyIncome.subtract(monthlyExpenses);
+            cumulative = cumulative.add(cashFlow);
+
+            String monthName = yearMonth.getMonth().name().substring(0, 3);
+            cashFlowData.add(new CashFlowData(monthName, cashFlow, cumulative));
+        }
+
+        return new CashFlowAnalysis(cashFlowData);
+    }
 }

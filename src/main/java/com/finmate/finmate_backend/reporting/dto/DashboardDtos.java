@@ -29,6 +29,16 @@ public class DashboardDtos {
             java.util.List<BudgetComparisonData> data
     ) {}
 
+    public record CashFlowData(
+            String month,
+            java.math.BigDecimal cashFlow,
+            java.math.BigDecimal cumulative
+    ) {}
+
+    public record CashFlowAnalysis(
+            java.util.List<CashFlowData> data
+    ) {}
+
     public record IncomeExpenseTrend(
             java.util.List<MonthlyTrendData> data
     ) {}

@@ -47,4 +47,13 @@ public class DashboardController {
         BudgetComparison comparison = dashboardService.getBudgetComparison(user);
         return ResponseEntity.ok(comparison);
     }
+
+    @GetMapping("/cash-flow-analysis")
+    public ResponseEntity<CashFlowAnalysis> getCashFlowAnalysis(
+            @RequestParam(defaultValue = "#{T(java.time.Year).now().value}") int year,
+            Authentication authentication) {
+        User user = getUser(authentication);
+        CashFlowAnalysis analysis = dashboardService.getCashFlowAnalysis(user, year);
+        return ResponseEntity.ok(analysis);
+    }
 }
