@@ -110,7 +110,7 @@ public class ExpenseTransactionService {
         // Find subscription if provided
         Subscription subscription = null;
         if (req.subscriptionId() != null) {
-            subscription = subscriptionRepository.findByIdAndFamilyId(req.subscriptionId(), familyId)
+            subscription = subscriptionRepository.findByIdAndUser_Families_Id(req.subscriptionId(), familyId)
                     .orElseThrow(() -> new IllegalArgumentException("Subscription not found or does not belong to your family"));
         }
 
@@ -162,7 +162,7 @@ public class ExpenseTransactionService {
         // Find subscription if provided
         Subscription subscription = null;
         if (req.subscriptionId() != null) {
-            subscription = subscriptionRepository.findByIdAndFamilyId(req.subscriptionId(), familyId)
+            subscription = subscriptionRepository.findByIdAndUser_Families_Id(req.subscriptionId(), familyId)
                     .orElseThrow(() -> new IllegalArgumentException("Subscription not found or does not belong to your family"));
         }
 

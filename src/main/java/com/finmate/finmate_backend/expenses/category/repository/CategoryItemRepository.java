@@ -15,4 +15,6 @@ public interface CategoryItemRepository extends JpaRepository<CategoryItem, Long
 
 @Query("select ci from CategoryItem ci where ci.expenseCategory.id = :categoryId and ci.expenseCategory.user.families.id = :familyId and ci.deleted = false order by ci.name asc")
 List<CategoryItem> findItemsByCategoryIdAndFamilyId(Long categoryId, Long familyId);
+
+    boolean existsByExpenseCategory_IdAndExpenseCategory_User_Families_IdAndNameIgnoreCase(Long aLong, Long familyId, String s);
 }

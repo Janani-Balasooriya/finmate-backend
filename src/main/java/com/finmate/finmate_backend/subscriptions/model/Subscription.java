@@ -32,13 +32,10 @@ public class Subscription {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "billing_cycle", nullable = false, length = 20)
-    private BillingCycle billingCycle = BillingCycle.MONTHLY;
+    private BillingCycle billingCycle = BillingCycle.monthly;
 
     @Column(name = "next_charge_date")
     private LocalDate nextChargeDate;
-
-    @Column(name = "vendor", length = 120)
-    private String vendor;
 
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
@@ -56,4 +53,9 @@ public class Subscription {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "accounts_id", nullable = false)
     private Account account;
+
+    // FK: subscriptions.category_items_id -> category_items.id
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_items_id", nullable = false)
+    private com.finmate.finmate_backend.expenses.category.model.CategoryItem categoryItem;
 }
