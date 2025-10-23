@@ -13,4 +13,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findAllByUser_Families_Id(Long familyId);
 
     Optional<Subscription> findByIdAndUser_Families_Id(Long id, Long familyId);
+
+    Subscription getSubscriptionById(Long aLong);
 }

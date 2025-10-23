@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -100,18 +99,25 @@ public class ExpenseTransactionService {
         Account account = accountRepository.findByIdAndFamilyId(req.accountId(), familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to your family"));
 
+
+
+        Long categoryItemId = req.categoryItemId();
+
+        // Find subscription if provided and conversion from subscription id to actual category item id
+        Subscription subscription = null;
+        System.out.println("req subscription id "+req.subscriptionId());
+        if (req.subscriptionId() != null) {
+            categoryItemId = subscriptionRepository.getSubscriptionById(req.categoryItemId()).getCategoryItem().getId();
+            System.out.println("Transaction is a subscription: Janani"+ categoryItemId);
+            subscription = subscriptionRepository.findByIdAndUser_Families_Id(req.subscriptionId(), familyId)
+                    .orElseThrow(() -> new IllegalArgumentException("Subscription not found or does not belong to your family"));
+        }
+
         // Find and validate category item belongs to family
-        CategoryItem categoryItem = categoryItemRepository.findById(req.categoryItemId())
+        CategoryItem categoryItem = categoryItemRepository.findById(categoryItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Category item not found"));
         if (!categoryItem.getExpenseCategory().getUser().getFamilies().getId().equals(familyId)) {
             throw new IllegalArgumentException("Category item does not belong to your family");
-        }
-
-        // Find subscription if provided
-        Subscription subscription = null;
-        if (req.subscriptionId() != null) {
-            subscription = subscriptionRepository.findByIdAndUser_Families_Id(req.subscriptionId(), familyId)
-                    .orElseThrow(() -> new IllegalArgumentException("Subscription not found or does not belong to your family"));
         }
 
         // Create and save transaction
