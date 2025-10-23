@@ -48,6 +48,7 @@ public class SubscriptionDtos {
             String accountName,
             Long categoryId,
             String categoryName,
+            String categoryColor,
             Long categoryItemId,
             String categoryItemName,
             LocalDate nextBilling,
