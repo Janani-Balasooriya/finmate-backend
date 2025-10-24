@@ -33,9 +33,10 @@ public class Goal {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private GoalStatus status = GoalStatus.ACTIVE;
+    private GoalStatus status = GoalStatus.active;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
+
 }
