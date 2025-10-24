@@ -109,7 +109,7 @@ public class GoalService {
         Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
 
-        Account account = accountRepository.findByIdAndUser(request.accountId(), user)
+        Account account = accountRepository.findByIdAndFamilyId(request.accountId(), user.getFamilies().getId())
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
         GoalContribution contribution = new GoalContribution();
@@ -152,7 +152,9 @@ public class GoalService {
                 goal.getTargetAmount(),
                 goal.getDeadline(),
                 goal.getStatus().name(),
-                goal.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                goal.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toLocalDate(),
+                totalSaved,
+                progress
         );
     }
 

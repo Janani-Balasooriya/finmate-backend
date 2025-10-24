@@ -11,7 +11,9 @@ public class GoalDtos {
             BigDecimal targetAmount,
             LocalDate deadline,
             String status,
-            LocalDate createdAt
+            LocalDate createdAt,
+            BigDecimal totalSaved,
+            int progress
     ) {}
 
     public record CreateGoalRequest(
