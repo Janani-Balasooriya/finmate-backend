@@ -33,10 +33,12 @@ public class DashboardService {
         // Get total income for current month
         BigDecimal totalIncomeThisMonth = incomeTransactionRepository.getTotalAmountByFamilyAndDateRange(
                 familyId, startOfMonth, endOfMonth);
+        if (totalIncomeThisMonth == null) totalIncomeThisMonth = BigDecimal.ZERO;
 
         // Get total expenses for current month
         BigDecimal totalExpensesThisMonth = expenseTransactionRepository.getTotalAmountByFamilyAndDateRange(
                 familyId, startOfMonth, endOfMonth);
+        if (totalExpensesThisMonth == null) totalExpensesThisMonth = BigDecimal.ZERO;
 
         // Calculate net savings
         BigDecimal netSavings = totalIncomeThisMonth.subtract(totalExpensesThisMonth);
