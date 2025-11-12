@@ -8,6 +8,7 @@ import com.finmate.finmate_backend.expenses.transactions.dto.ExpenseTransactionD
 import com.finmate.finmate_backend.expenses.transactions.model.ExpenseTransaction;
 import com.finmate.finmate_backend.expenses.transactions.respository.ExpenseTransactionRepository;
 import com.finmate.finmate_backend.subscriptions.model.Subscription;
+import com.finmate.finmate_backend.insights.service.InsightsCacheInvalidationService;
 import com.finmate.finmate_backend.subscriptions.repository.SubscriptionRepository;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class ExpenseTransactionService {
     private final AccountRepository accountRepository;
     private final CategoryItemRepository categoryItemRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final InsightsCacheInvalidationService insightsCacheInvalidationService;
 
     private Long familyIdOf(User user) { return user.getFamilies().getId(); }
 
@@ -130,6 +132,7 @@ public class ExpenseTransactionService {
         transaction.setSubscription(subscription);
 
         ExpenseTransaction saved = expenseTransactionRepository.save(transaction);
+        insightsCacheInvalidationService.invalidateInsightsCache(familyId);
         return toItem(saved);
     }
 
@@ -180,6 +183,7 @@ public class ExpenseTransactionService {
         if (req.subscriptionId() != null) transaction.setSubscription(subscription);
 
         ExpenseTransaction saved = expenseTransactionRepository.save(transaction);
+        insightsCacheInvalidationService.invalidateInsightsCache(familyId);
         return toItem(saved);
     }
 
@@ -188,6 +192,7 @@ public class ExpenseTransactionService {
         ExpenseTransaction transaction = expenseTransactionRepository.findByFamilyAndId(familyId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Expense transaction not found"));
         expenseTransactionRepository.delete(transaction);
+        insightsCacheInvalidationService.invalidateInsightsCache(familyId);
     }
 
     public ExpenseTransactionSummary getSummary(User user) {

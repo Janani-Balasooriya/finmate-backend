@@ -6,6 +6,7 @@ import com.finmate.finmate_backend.expenses.category.model.Category;
 import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
 import com.finmate.finmate_backend.expenses.category.repository.CategoryItemRepository;
 import com.finmate.finmate_backend.expenses.category.repository.CategoryRepository;
+import com.finmate.finmate_backend.insights.service.InsightsCacheInvalidationService;
 import com.finmate.finmate_backend.subscriptions.dto.SubscriptionDtos.*;
 import com.finmate.finmate_backend.subscriptions.model.Subscription;
 import com.finmate.finmate_backend.subscriptions.model.enums.BillingCycle;
@@ -26,6 +27,7 @@ public class SubscriptionService {
     private final CategoryRepository categoryRepository;
     private final CategoryItemRepository categoryItemRepository;
     private final AccountRepository accountRepository;
+    private final InsightsCacheInvalidationService insightsCacheInvalidationService;
 
     private void validateUser(User user) {
         if (user == null) throw new IllegalArgumentException("User is null");
@@ -100,6 +102,7 @@ public class SubscriptionService {
         subscription.setCategoryItem(categoryItem);
 
         Subscription saved = subscriptionRepository.save(subscription);
+        insightsCacheInvalidationService.invalidateInsightsCache(familyId);
         return toDto(saved);
     }
 
@@ -132,6 +135,7 @@ public class SubscriptionService {
         if (request.isActive() != null) subscription.setActive(request.isActive());
 
         Subscription saved = subscriptionRepository.save(subscription);
+        insightsCacheInvalidationService.invalidateInsightsCache(familyId);
         return toDto(saved);
     }
 
@@ -142,6 +146,7 @@ public class SubscriptionService {
         Subscription subscription = subscriptionRepository.findByIdAndUser_Families_Id(id, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
         subscriptionRepository.delete(subscription);
+        insightsCacheInvalidationService.invalidateInsightsCache(familyId);
     }
 
     private SubscriptionItemDto toDto(Subscription s) {
