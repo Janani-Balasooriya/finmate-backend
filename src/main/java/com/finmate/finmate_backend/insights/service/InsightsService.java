@@ -38,9 +38,8 @@ public class InsightsService {
         new SubscriptionsRenewingSoonRule(),
         new SavingsRateMTDRule(),
         new DuplicateChargesRule(),
-        new UncategorizedTransactionsRule(),
-        new SubscriptionPriceJumpRule(),
-        new FreeToSpendRule()
+        new SubscriptionPriceJumpRule()
+//        new FreeToSpendRule()
     );
 
     public List<InsightDto> getInsights(Long familyId) {
