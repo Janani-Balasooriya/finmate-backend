@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.subscriptions.model;
 
 import com.finmate.finmate_backend.accounts.model.Account;
+import com.finmate.finmate_backend.accounts.model.CurrencyCode;
 import com.finmate.finmate_backend.subscriptions.model.enums.BillingCycle;
 import com.finmate.finmate_backend.users.model.User;
 import jakarta.persistence.*;
@@ -58,4 +59,9 @@ public class Subscription {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_items_id", nullable = false)
     private com.finmate.finmate_backend.expenses.category.model.CategoryItem categoryItem;
+
+    // FK: subscriptions.currency_codes_id -> currency_codes.id
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "currency_codes_id", nullable = false)
+    private CurrencyCode currencyCode;
 }

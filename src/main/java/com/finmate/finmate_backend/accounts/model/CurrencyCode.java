@@ -3,6 +3,8 @@ package com.finmate.finmate_backend.accounts.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Locale;
 
 @Entity
@@ -20,6 +22,12 @@ public class CurrencyCode {
 
     @Column(name = "code", nullable = false, length = 3)
     private String code;                // e.g., LKR, USD, EUR
+
+    @Column(name = "exchange_rate", precision = 14, scale = 2)
+    private BigDecimal exchangeRate;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @PrePersist @PreUpdate
     private void normalize() {

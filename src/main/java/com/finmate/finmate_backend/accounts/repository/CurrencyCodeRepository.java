@@ -10,6 +10,8 @@ import java.util.List;
 public interface CurrencyCodeRepository extends JpaRepository<CurrencyCode, Integer> {
     
     List<CurrencyCode> findAllByOrderByCode();
+
+    List<CurrencyCode> findAllByOrderById();
     
     boolean existsByCode(String code);
 }

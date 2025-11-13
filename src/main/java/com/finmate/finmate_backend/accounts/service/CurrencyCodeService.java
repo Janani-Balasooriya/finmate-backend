@@ -38,7 +38,7 @@ public class CurrencyCodeService implements CommandLineRunner {
     }
     
     public List<CurrencyCode> getAllCurrencyCodes() {
-        return currencyCodeRepository.findAllByOrderByCode();
+        return currencyCodeRepository.findAllByOrderById();
     }
 }
 
