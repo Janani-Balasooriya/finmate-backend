@@ -2,6 +2,7 @@ package com.finmate.finmate_backend.subscriptions.service;
 
 import com.finmate.finmate_backend.accounts.model.Account;
 import com.finmate.finmate_backend.accounts.repository.AccountRepository;
+import com.finmate.finmate_backend.accounts.service.CurrencyCodeService;
 import com.finmate.finmate_backend.expenses.category.model.Category;
 import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
 import com.finmate.finmate_backend.expenses.category.repository.CategoryItemRepository;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -27,6 +29,7 @@ public class SubscriptionService {
     private final CategoryRepository categoryRepository;
     private final CategoryItemRepository categoryItemRepository;
     private final AccountRepository accountRepository;
+    private final CurrencyCodeService currencyCodeService;
     private final InsightsCacheInvalidationService insightsCacheInvalidationService;
 
     private void validateUser(User user) {
@@ -37,25 +40,34 @@ public class SubscriptionService {
     public List<SubscriptionItemDto> getSubscriptions(User user) {
         validateUser(user);
         Long familyId = user.getFamilies().getId();
+        String baseCurrency = currencyCodeService.getBaseCurrencyForUser(user);
 
         return subscriptionRepository.findAllByUser_Families_Id(familyId)
                 .stream()
-                .map(subscription -> new SubscriptionItemDto(
-                        subscription.getId(),
-                        subscription.getName(),
-                        subscription.getAmount(),
-                        subscription.getAccount().getCurrencyCode().getCode(),
-                        subscription.getBillingCycle().name().toLowerCase(),
-                        subscription.getAccount().getId(),
-                        subscription.getAccount().getName(),
-                        subscription.getCategoryItem().getExpenseCategory().getId(),
-                        subscription.getCategoryItem().getExpenseCategory().getName(),
-                        subscription.getCategoryItem().getExpenseCategory().getColor(),
-                        subscription.getCategoryItem().getId(),
-                        subscription.getCategoryItem().getName(),
-                        subscription.getNextChargeDate(),
-                        subscription.isActive()
-                ))
+                .map(subscription -> {
+                    String currencyCode = subscription.getAccount().getCurrencyCode().getCode();
+                    BigDecimal originalAmount = subscription.getAmount();
+                    BigDecimal amountInBaseCurrency = currencyCodeService.convertCurrency(originalAmount, currencyCode, baseCurrency);
+
+                    return new SubscriptionItemDto(
+                            subscription.getId(),
+                            subscription.getName(),
+                            originalAmount,
+                            amountInBaseCurrency,
+                            currencyCode,
+                            baseCurrency,
+                            subscription.getBillingCycle().name().toLowerCase(),
+                            subscription.getAccount().getId(),
+                            subscription.getAccount().getName(),
+                            subscription.getCategoryItem().getExpenseCategory().getId(),
+                            subscription.getCategoryItem().getExpenseCategory().getName(),
+                            subscription.getCategoryItem().getExpenseCategory().getColor(),
+                            subscription.getCategoryItem().getId(),
+                            subscription.getCategoryItem().getName(),
+                            subscription.getNextChargeDate(),
+                            subscription.isActive()
+                    );
+                })
                 .toList();
     }
 
@@ -66,7 +78,7 @@ public class SubscriptionService {
         Subscription subscription = subscriptionRepository.findByIdAndUser_Families_Id(id, familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Subscription not found"));
 
-        return toDto(subscription);
+        return toDto(subscription, user);
     }
 
     @Transactional
@@ -103,7 +115,7 @@ public class SubscriptionService {
 
         Subscription saved = subscriptionRepository.save(subscription);
         insightsCacheInvalidationService.invalidateInsightsCache(familyId);
-        return toDto(saved);
+        return toDto(saved, user);
     }
 
     public SubscriptionItemDto updateSubscription(User user, Long id, UpdateSubscriptionRequest request) {
@@ -136,7 +148,7 @@ public class SubscriptionService {
 
         Subscription saved = subscriptionRepository.save(subscription);
         insightsCacheInvalidationService.invalidateInsightsCache(familyId);
-        return toDto(saved);
+        return toDto(saved, user);
     }
 
     public void deleteSubscription(User user, Long id) {
@@ -149,12 +161,19 @@ public class SubscriptionService {
         insightsCacheInvalidationService.invalidateInsightsCache(familyId);
     }
 
-    private SubscriptionItemDto toDto(Subscription s) {
+    private SubscriptionItemDto toDto(Subscription s, User user) {
+        String currencyCode = s.getAccount().getCurrencyCode().getCode();
+        String baseCurrency = currencyCodeService.getBaseCurrencyForUser(user);
+        BigDecimal originalAmount = s.getAmount();
+        BigDecimal amountInBaseCurrency = currencyCodeService.convertCurrency(originalAmount, currencyCode, baseCurrency);
+
         return new SubscriptionItemDto(
                 s.getId(),
                 s.getName(),
-                s.getAmount(),
-                s.getAccount().getCurrencyCode().getCode(),
+                originalAmount,
+                amountInBaseCurrency,
+                currencyCode,
+                baseCurrency,
                 s.getBillingCycle().name().toLowerCase(),
                 s.getAccount().getId(),
                 s.getAccount().getName(),

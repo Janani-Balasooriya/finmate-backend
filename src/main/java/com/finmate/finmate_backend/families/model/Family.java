@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.families.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
@@ -28,4 +29,9 @@ public class Family {
     @Column(name = "created_at", updatable = false, nullable = false)
     @JsonIgnore
     private Instant createdAt;
+
+    @Size(max = 5)
+    @Column(name = "base_currency_code", length = 5)
+    private String baseCurrencyCode;
+
 }

@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.users.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.users.model.enums.Role;
 import com.finmate.finmate_backend.users.model.enums.Status;
@@ -70,5 +71,13 @@ public class User {
     // FK: users.families_id -> families.id (NOT NULL)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "families_id", nullable = false)
+    @JsonIgnore
     private Family families;
+
+    @JsonProperty("families")
+    public FamilyInfo getFamilyInfo() {
+        return new FamilyInfo(families.getId(), families.getBaseCurrencyCode());
+    }
+
+    public record FamilyInfo(Long id, String baseCurrencyCode) {}
 }

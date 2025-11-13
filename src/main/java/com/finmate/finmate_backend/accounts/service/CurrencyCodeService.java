@@ -2,6 +2,7 @@ package com.finmate.finmate_backend.accounts.service;
 
 import com.finmate.finmate_backend.accounts.model.CurrencyCode;
 import com.finmate.finmate_backend.accounts.repository.CurrencyCodeRepository;
+import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,8 +77,91 @@ public class CurrencyCodeService implements CommandLineRunner {
         return currencyCodeRepository.findAllByOrderById();
     }
 
+    /**
+     * Get the base currency code for a user's family
+     * @param user The user
+     * @return Base currency code (defaults to "USD" if not set)
+     */
+    public String getBaseCurrencyForUser(User user) {
+        if (user == null || user.getFamilies() == null) {
+            return "USD"; // Default fallback
+        }
+        String baseCurrency = user.getFamilies().getBaseCurrencyCode();
+        return (baseCurrency != null && !baseCurrency.trim().isEmpty()) ? baseCurrency : "USD";
+    }
+
+    /**
+     * Update exchange rates using the family's base currency
+     * @param user The user whose family's base currency will be used
+     */
+    @Transactional
+    public void updateExchangeRatesForUser(User user) {
+        String baseCurrency = getBaseCurrencyForUser(user);
+        log.info("Updating exchange rates for user {} using base currency: {}", user.getId(), baseCurrency);
+        updateExchangeRates(baseCurrency);
+    }
+
+    /**
+     * Convert amount from one currency to another using database exchange rates
+     * @param amount The amount to convert
+     * @param fromCurrencyCode The source currency code (e.g., "USD")
+     * @param toCurrencyCode The target currency code (e.g., "LKR")
+     * @return Converted amount
+     */
+    public BigDecimal convertCurrency(BigDecimal amount, String fromCurrencyCode, String toCurrencyCode) {
+        if (amount == null || fromCurrencyCode == null || toCurrencyCode == null) {
+            throw new IllegalArgumentException("Amount and currency codes cannot be null");
+        }
+
+        if (fromCurrencyCode.equals(toCurrencyCode)) {
+            return amount; // No conversion needed
+        }
+
+        // Get exchange rates from database
+        CurrencyCode fromCurrency = currencyCodeRepository.findByCode(fromCurrencyCode.toUpperCase())
+                .orElseThrow(() -> new IllegalArgumentException("Currency not found: " + fromCurrencyCode));
+
+        CurrencyCode toCurrency = currencyCodeRepository.findByCode(toCurrencyCode.toUpperCase())
+                .orElseThrow(() -> new IllegalArgumentException("Currency not found: " + toCurrencyCode));
+
+        BigDecimal fromRate = fromCurrency.getExchangeRate();
+        BigDecimal toRate = toCurrency.getExchangeRate();
+
+        if (fromRate == null || toRate == null) {
+            throw new IllegalStateException("Exchange rates not available for conversion");
+        }
+
+        // Convert: amount in fromCurrency * (toRate / fromRate)
+        // Since rates are stored as "units of currency per 1 USD", we need to:
+        // 1. Convert fromCurrency amount to USD: amount / fromRate
+        // 2. Convert USD to toCurrency: (amount / fromRate) * toRate
+
+        BigDecimal amountInUSD = amount.divide(fromRate, 6, RoundingMode.HALF_UP);
+        BigDecimal convertedAmount = amountInUSD.multiply(toRate);
+
+        return convertedAmount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Convert amount to LKR if it's not already in LKR
+     * @param amount The amount to convert
+     * @param currencyCode The current currency code
+     * @return Amount in LKR
+     */
+    public BigDecimal convertToLKR(BigDecimal amount, String currencyCode) {
+        if ("LKR".equals(currencyCode)) {
+            return amount; // Already in LKR
+        }
+        return convertCurrency(amount, currencyCode, "LKR");
+    }
+
     @Transactional
     public void updateExchangeRates() {
+        updateExchangeRates("USD"); // Default to USD for backward compatibility
+    }
+
+    @Transactional
+    public void updateExchangeRates(String baseCurrency) {
         try {
             // Check if we need to update (once per day)
             Instant lastUpdate = getLastUpdateTime();
@@ -88,18 +172,18 @@ public class CurrencyCodeService implements CommandLineRunner {
                 return;
             }
 
-            // Fetch exchange rates from API
-            String apiUrl = "https://v6.exchangerate-api.com/v6/" + exchangeRateApiKey + "/latest/USD";
-            log.info("Fetching exchange rates from: {}", apiUrl);
+            // Fetch exchange rates from API using the specified base currency
+            String apiUrl = "https://v6.exchangerate-api.com/v6/" + exchangeRateApiKey + "/latest/" + baseCurrency.toUpperCase();
+            log.info("Fetching exchange rates from: {} (base: {})", apiUrl, baseCurrency);
 
             ResponseEntity<Map> response = restTemplate.getForEntity(apiUrl, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
-                String baseCurrency = (String) responseBody.get("base_code");
+                String responseBaseCurrency = (String) responseBody.get("base_code");
 
-                if (!"USD".equals(baseCurrency)) {
-                    log.warn("Expected USD as base currency, got: {}", baseCurrency);
+                if (!baseCurrency.equalsIgnoreCase(responseBaseCurrency)) {
+                    log.warn("Expected {} as base currency, got: {}", baseCurrency, responseBaseCurrency);
                     return;
                 }
 
