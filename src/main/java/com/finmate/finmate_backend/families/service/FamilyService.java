@@ -1,6 +1,7 @@
 package com.finmate.finmate_backend.families.service;
 
 import com.finmate.finmate_backend.families.dto.MemberDto;
+import com.finmate.finmate_backend.families.dto.UpdateFamilyCurrencyRequest;
 import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.families.repository.FamilyRepository;
 import com.finmate.finmate_backend.users.model.User;
@@ -38,5 +39,17 @@ public class FamilyService {
                 user.getRole().name().toLowerCase()
             ))
             .toList();
+    }
+
+    public Family updateFamilyCurrency(Long familyId, UpdateFamilyCurrencyRequest request) {
+        // Verify family exists
+        Family family = familyRepository.findById(familyId)
+            .orElseThrow(() -> new RuntimeException("Family not found"));
+
+        // Update currency
+        family.setBaseCurrencyCode(request.baseCurrencyCode());
+
+        // Save and return
+        return familyRepository.save(family);
     }
 }

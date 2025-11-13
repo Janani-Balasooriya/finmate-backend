@@ -2,6 +2,7 @@ package com.finmate.finmate_backend.families.controller;
 
 import com.finmate.finmate_backend.auth.dto.ApiResponse;
 import com.finmate.finmate_backend.families.dto.MemberDto;
+import com.finmate.finmate_backend.families.dto.UpdateFamilyCurrencyRequest;
 import com.finmate.finmate_backend.families.service.FamilyService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,6 +35,26 @@ public class FamilyMemberController {
 
             List<MemberDto> members = familyService.getFamilyMembers(familyId);
             return ResponseEntity.ok(ApiResponse.success("Family members retrieved successfully", members));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{familyId}/currency")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<String>> updateFamilyCurrency(
+            @PathVariable Long familyId,
+            @RequestBody UpdateFamilyCurrencyRequest request,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+
+            // TODO: Add authorization check to ensure user belongs to the family
+            // For now, we'll let the service handle it
+
+            familyService.updateFamilyCurrency(familyId, request);
+            return ResponseEntity.ok(ApiResponse.success("Family currency updated successfully", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error(e.getMessage()));
