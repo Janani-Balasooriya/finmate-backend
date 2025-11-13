@@ -85,4 +85,15 @@ public class AccountController {
                 .toList();
         return ResponseEntity.ok(dtos);
     }
+
+    @PostMapping("/update-exchange-rates")
+    public ResponseEntity<?> updateExchangeRates() {
+        try {
+            currencyCodeService.updateExchangeRates();
+            return ResponseEntity.ok(java.util.Map.of("message", "Exchange rates updated successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(java.util.Map.of("message", "Failed to update exchange rates: " + e.getMessage()));
+        }
+    }
 }
