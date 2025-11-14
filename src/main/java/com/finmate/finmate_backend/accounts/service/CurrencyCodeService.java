@@ -20,11 +20,30 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CurrencyCodeService implements CommandLineRunner {
+
+    /**
+     * DTO for ExchangeRate-API supported codes response
+     */
+    public record SupportedCodesResponse(
+            String result,
+            String documentation,
+            String terms_of_use,
+            List<List<String>> supported_codes
+    ) {}
+
+    /**
+     * DTO for individual currency code entry
+     */
+    public record CurrencyCodeEntry(
+            String code,
+            String name
+    ) {}
 
     private final CurrencyCodeRepository currencyCodeRepository;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -42,17 +61,72 @@ public class CurrencyCodeService implements CommandLineRunner {
     
     private void seedCurrencyCodes() {
         if (currencyCodeRepository.count() == 0) {
-            List<String> codes = Arrays.asList("LKR", "USD", "EUR", "GBP", "INR");
-
-            for (String code : codes) {
-                if (!currencyCodeRepository.existsByCode(code)) {
-                    CurrencyCode currencyCode = CurrencyCode.builder()
-                            .code(code)
-                            .build();
-                    currencyCodeRepository.save(currencyCode);
-                }
+            try {
+                // Try to fetch supported currency codes from ExchangeRate-API
+                fetchAndSeedCurrencyCodesFromAPI();
+            } catch (Exception e) {
+                log.warn("Failed to fetch currency codes from API, using fallback list: {}", e.getMessage());
+                // Fallback to hardcoded list if API fails
+                seedCurrencyCodesFallback();
             }
         }
+    }
+
+    private void fetchAndSeedCurrencyCodesFromAPI() {
+        if (exchangeRateApiKey == null || exchangeRateApiKey.trim().isEmpty()) {
+            throw new IllegalStateException("Exchange rate API key not configured");
+        }
+
+        String apiUrl = "https://v6.exchangerate-api.com/v6/" + exchangeRateApiKey + "/codes";
+        log.info("Fetching supported currency codes from: {}", apiUrl);
+
+        ResponseEntity<SupportedCodesResponse> response = restTemplate.getForEntity(apiUrl, SupportedCodesResponse.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            SupportedCodesResponse apiResponse = response.getBody();
+
+            if ("success".equals(apiResponse.result()) && apiResponse.supported_codes() != null) {
+                List<String> codes = apiResponse.supported_codes().stream()
+                        .filter(entry -> entry.size() >= 1) // Ensure we have at least the code
+                        .map(entry -> entry.get(0)) // Get the currency code (first element)
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                log.info("Fetched {} currency codes from API", codes.size());
+
+                // Insert all codes into database
+                for (String code : codes) {
+                    if (!currencyCodeRepository.existsByCode(code)) {
+                        CurrencyCode currencyCode = CurrencyCode.builder()
+                                .code(code)
+                                .build();
+                        currencyCodeRepository.save(currencyCode);
+                    }
+                }
+
+                log.info("Successfully seeded {} currency codes from API", codes.size());
+            } else {
+                throw new IllegalStateException("Invalid API response: " + apiResponse.result());
+            }
+        } else {
+            throw new IllegalStateException("Failed to fetch currency codes: " + response.getStatusCode());
+        }
+    }
+
+    private void seedCurrencyCodesFallback() {
+        List<String> codes = Arrays.asList("LKR", "USD", "EUR", "GBP", "INR");
+        log.info("Using fallback currency codes: {}", codes);
+
+        for (String code : codes) {
+            if (!currencyCodeRepository.existsByCode(code)) {
+                CurrencyCode currencyCode = CurrencyCode.builder()
+                        .code(code)
+                        .build();
+                currencyCodeRepository.save(currencyCode);
+            }
+        }
+
+        log.info("Successfully seeded {} fallback currency codes", codes.size());
     }
 
     private void checkAndUpdateInitialExchangeRates() {
