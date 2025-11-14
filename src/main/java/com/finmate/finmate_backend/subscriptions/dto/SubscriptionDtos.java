@@ -20,13 +20,14 @@ public class SubscriptionDtos {
     ) {}
 
     public record CreateSubscriptionRequest(
-            String serviceName,
-            Long categoryId,
-            Long accountId,
-            BigDecimal amount,
-            String billingCycle,
-            LocalDate nextBilling
-    ) {}
+             String serviceName,
+             Long categoryId,
+             Long accountId,
+             BigDecimal amount,
+             String billingCycle,
+             LocalDate nextBilling,
+             String currencyCode
+     ) {}
 
     public record UpdateSubscriptionRequest(
             String name,

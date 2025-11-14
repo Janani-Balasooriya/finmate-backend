@@ -91,15 +91,15 @@ public class CurrencyCodeService implements CommandLineRunner {
     }
 
     /**
-     * Update exchange rates using the family's base currency
-     * @param user The user whose family's base currency will be used
+     * Update exchange rates for a user (uses USD as base for system-wide consistency)
+     * @param user The user triggering the update
      */
     @Transactional
     public void updateExchangeRatesForUser(User user) {
-        String baseCurrency = getBaseCurrencyForUser(user);
-        log.info("Updating exchange rates for user {} using base currency: {}", user.getId(), baseCurrency);
-        updateExchangeRates(baseCurrency);
+        log.info("Updating exchange rates for user {} (using USD base)", user.getId());
+        updateExchangeRates(); // Uses USD as base for system-wide consistency
     }
+
 
     /**
      * Convert amount from one currency to another using database exchange rates
@@ -172,9 +172,11 @@ public class CurrencyCodeService implements CommandLineRunner {
                 return;
             }
 
-            // Fetch exchange rates from API using the specified base currency
-            String apiUrl = "https://v6.exchangerate-api.com/v6/" + exchangeRateApiKey + "/latest/" + baseCurrency.toUpperCase();
-            log.info("Fetching exchange rates from: {} (base: {})", apiUrl, baseCurrency);
+            // ALWAYS use USD as base currency for system-wide consistency
+            // since we have a shared database for all families
+            String actualBaseCurrency = "USD";
+            String apiUrl = "https://v6.exchangerate-api.com/v6/" + exchangeRateApiKey + "/latest/" + actualBaseCurrency;
+            log.info("Fetching exchange rates from: {} (base: {})", apiUrl, actualBaseCurrency);
 
             ResponseEntity<Map> response = restTemplate.getForEntity(apiUrl, Map.class);
 
@@ -182,8 +184,8 @@ public class CurrencyCodeService implements CommandLineRunner {
                 Map<String, Object> responseBody = response.getBody();
                 String responseBaseCurrency = (String) responseBody.get("base_code");
 
-                if (!baseCurrency.equalsIgnoreCase(responseBaseCurrency)) {
-                    log.warn("Expected {} as base currency, got: {}", baseCurrency, responseBaseCurrency);
+                if (!actualBaseCurrency.equalsIgnoreCase(responseBaseCurrency)) {
+                    log.warn("Expected {} as base currency, got: {}", actualBaseCurrency, responseBaseCurrency);
                     return;
                 }
 

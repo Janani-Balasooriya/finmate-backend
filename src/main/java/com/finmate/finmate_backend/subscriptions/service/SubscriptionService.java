@@ -45,7 +45,7 @@ public class SubscriptionService {
         return subscriptionRepository.findAllByUser_Families_Id(familyId)
                 .stream()
                 .map(subscription -> {
-                    String currencyCode = subscription.getAccount().getCurrencyCode().getCode();
+                    String currencyCode = subscription.getCurrencyCode().getCode();
                     BigDecimal originalAmount = subscription.getAmount();
                     BigDecimal amountInBaseCurrency = currencyCodeService.convertCurrency(originalAmount, currencyCode, baseCurrency);
 
@@ -97,6 +97,12 @@ public class SubscriptionService {
         Account account = accountRepository.findByIdAndUser(request.accountId(), user)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
+        // Get the currency code
+        com.finmate.finmate_backend.accounts.model.CurrencyCode currencyCode = currencyCodeService.getAllCurrencyCodes().stream()
+                .filter(c -> c.getCode().equals(request.currencyCode()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid currency code"));
+
         CategoryItem categoryItem = new CategoryItem();
         categoryItem.setExpenseCategory(category);
         categoryItem.setName(request.serviceName());
@@ -112,6 +118,7 @@ public class SubscriptionService {
         subscription.setActive(true);
         subscription.setAccount(account);
         subscription.setCategoryItem(categoryItem);
+        subscription.setCurrencyCode(currencyCode);
 
         Subscription saved = subscriptionRepository.save(subscription);
         insightsCacheInvalidationService.invalidateInsightsCache(familyId);
@@ -162,7 +169,7 @@ public class SubscriptionService {
     }
 
     private SubscriptionItemDto toDto(Subscription s, User user) {
-        String currencyCode = s.getAccount().getCurrencyCode().getCode();
+        String currencyCode = s.getCurrencyCode().getCode();
         String baseCurrency = currencyCodeService.getBaseCurrencyForUser(user);
         BigDecimal originalAmount = s.getAmount();
         BigDecimal amountInBaseCurrency = currencyCodeService.convertCurrency(originalAmount, currencyCode, baseCurrency);
