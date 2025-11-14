@@ -76,6 +76,7 @@ public class AuthService {
             // Create new family for the user (regular registration)
             Family family = new Family();
             family.setCreatedAt(Instant.now());
+            family.setBaseCurrencyCode("LKR"); // Set default base currency to LKR
             assignedFamily = familyRepository.save(family);
         }
 
