@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/goals")
@@ -116,16 +117,18 @@ public class GoalController {
     }
 
     @DeleteMapping("/{goalId}/contributions/{contributionId}")
-    public ResponseEntity<Void> deleteContribution(Authentication authentication,
+    public ResponseEntity<?> deleteContribution(Authentication authentication,
                                                   @PathVariable Long goalId,
                                                   @PathVariable Long contributionId) {
         try {
             User user = getUser(authentication);
             goalService.deleteContribution(user, goalId, contributionId);
             return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Cannot delete another user's contribution"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to delete contribution"));
         }
     }
 
