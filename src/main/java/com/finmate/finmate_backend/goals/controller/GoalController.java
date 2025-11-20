@@ -115,6 +115,20 @@ public class GoalController {
         }
     }
 
+    @DeleteMapping("/{goalId}/contributions/{contributionId}")
+    public ResponseEntity<Void> deleteContribution(Authentication authentication,
+                                                  @PathVariable Long goalId,
+                                                  @PathVariable Long contributionId) {
+        try {
+            User user = getUser(authentication);
+            goalService.deleteContribution(user, goalId, contributionId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
     @GetMapping("/{goalId}/total-saved")
     public ResponseEntity<BigDecimal> getTotalSaved(Authentication authentication, @PathVariable Long goalId) {
         try {

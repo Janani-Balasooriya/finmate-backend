@@ -122,6 +122,31 @@ public class GoalService {
         return toContributionDto(saved);
     }
 
+    @Transactional
+    public void deleteContribution(User user, Long goalId, Long contributionId) {
+        validateUser(user);
+
+        // Verify goal exists
+        goalRepository.findById(goalId)
+                .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        // Find and verify the contribution belongs to the user
+        GoalContribution contribution = goalContributionRepository.findById(contributionId)
+                .orElseThrow(() -> new IllegalArgumentException("Contribution not found"));
+
+        // Verify the contribution belongs to the user
+        if (!contribution.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("Contribution does not belong to user");
+        }
+
+        // Verify the contribution belongs to the goal
+        if (!contribution.getGoal().getId().equals(goalId)) {
+            throw new IllegalArgumentException("Contribution does not belong to goal");
+        }
+
+        goalContributionRepository.delete(contribution);
+    }
+
     public BigDecimal getTotalSaved(User user, Long goalId) {
         validateUser(user);
 
