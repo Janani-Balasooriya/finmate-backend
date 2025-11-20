@@ -5,6 +5,9 @@ import com.finmate.finmate_backend.accounts.model.Account;
 import com.finmate.finmate_backend.accounts.model.CurrencyCode;
 import com.finmate.finmate_backend.accounts.repository.AccountRepository;
 import com.finmate.finmate_backend.accounts.repository.CurrencyCodeRepository;
+import com.finmate.finmate_backend.expenses.transactions.respository.ExpenseTransactionRepository;
+import com.finmate.finmate_backend.goals.repository.GoalContributionRepository;
+import com.finmate.finmate_backend.income.transactions.repository.IncomeTransactionRepository;
 import com.finmate.finmate_backend.users.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,9 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final CurrencyCodeRepository currencyCodeRepository;
+    private final IncomeTransactionRepository incomeTransactionRepository;
+    private final ExpenseTransactionRepository expenseTransactionRepository;
+    private final GoalContributionRepository goalContributionRepository;
 
     private Long familyIdOf(User user) { return user.getFamilies().getId(); }
 
@@ -119,12 +125,36 @@ public class AccountService {
     }
 
     private BigDecimal calculateCurrentBalance(Account account) {
-        // For now, return opening balance. In a real implementation, you would:
-        // 1. Sum all income transactions for this account
-        // 2. Sum all expense transactions for this account
-        // 3. Return opening_balance + total_income - total_expenses
-        // This would require additional repository methods to query income/expense transactions
-        return account.getOpeningBalance();
+        // Calculate current balance: opening_balance + total_income - total_expenses - total_goal_contributions
+
+        Long familyId = account.getUser().getFamilies().getId();
+
+        // Sum all income transactions for this account
+        BigDecimal totalIncome = incomeTransactionRepository
+                .findByFamilyIdAndAccountId(familyId, account.getId())
+                .stream()
+                .map(income -> income.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Sum all expense transactions for this account
+        BigDecimal totalExpenses = expenseTransactionRepository
+                .findByFamilyAndAccountId(familyId, account.getId())
+                .stream()
+                .map(expense -> expense.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Sum all goal contributions from this account
+        BigDecimal totalGoalContributions = goalContributionRepository
+                .findByFamilyIdAndAccountId(familyId, account.getId())
+                .stream()
+                .map(contribution -> contribution.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Calculate final balance: opening + income - expenses - goal contributions
+        return account.getOpeningBalance()
+                .add(totalIncome)
+                .subtract(totalExpenses)
+                .subtract(totalGoalContributions);
     }
 }
 

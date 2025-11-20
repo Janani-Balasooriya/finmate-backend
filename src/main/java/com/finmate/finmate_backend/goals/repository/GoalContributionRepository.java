@@ -12,4 +12,7 @@ import java.util.List;
 @Repository
 public interface GoalContributionRepository extends JpaRepository<GoalContribution, Long> {
     List<GoalContribution> findAllByGoal_IdOrderByCreatedAtDesc(Long goalId);
+
+    @Query("SELECT gc FROM GoalContribution gc WHERE gc.user.families.id = :familyId AND gc.account.id = :accountId")
+    List<GoalContribution> findByFamilyIdAndAccountId(@Param("familyId") Long familyId, @Param("accountId") Long accountId);
 }
