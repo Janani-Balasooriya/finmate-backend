@@ -136,7 +136,7 @@ public class GoalService {
 
         // Verify the contribution belongs to the user
         if (!contribution.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Contribution does not belong to user");
+            throw new IllegalArgumentException("Cannot delete another user's contribution");
         }
 
         // Verify the contribution belongs to the goal
