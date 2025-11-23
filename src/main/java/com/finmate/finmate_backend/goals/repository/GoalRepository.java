@@ -1,5 +1,6 @@
 package com.finmate.finmate_backend.goals.repository;
 
+import com.finmate.finmate_backend.families.model.Family;
 import com.finmate.finmate_backend.goals.model.Goal;
 import com.finmate.finmate_backend.users.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface GoalRepository extends JpaRepository<Goal, Long> {
-    // Basic CRUD operations provided by JpaRepository
+    List<Goal> findByFamilies(Family family);
 }

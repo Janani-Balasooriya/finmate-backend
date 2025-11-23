@@ -33,8 +33,7 @@ public class GoalService {
 
     public List<GoalDto> getGoals(User user) {
         validateUser(user);
-        // For now, return all goals - in a real implementation you'd filter by family
-        return goalRepository.findAll()
+        return goalRepository.findByFamilies(user.getFamilies())
                 .stream()
                 .map(this::toDto)
                 .toList();
@@ -45,6 +44,11 @@ public class GoalService {
 
         Goal goal = goalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        // Verify the goal belongs to the user's family
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
 
         return toDto(goal);
     }
@@ -58,6 +62,7 @@ public class GoalService {
         goal.setTargetAmount(request.targetAmount());
         goal.setDeadline(request.deadline());
         goal.setStatus(GoalStatus.active);
+        goal.setFamilies(user.getFamilies());
 
         Goal saved = goalRepository.save(goal);
         return toDto(saved);
@@ -69,6 +74,11 @@ public class GoalService {
 
         Goal goal = goalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        // Verify the goal belongs to the user's family
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
 
         if (request.name() != null) goal.setName(request.name());
         if (request.targetAmount() != null) goal.setTargetAmount(request.targetAmount());
@@ -86,15 +96,24 @@ public class GoalService {
         Goal goal = goalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
 
+        // Verify the goal belongs to the user's family
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
+
         goalRepository.delete(goal);
     }
 
     public List<GoalContributionDto> getGoalContributions(User user, Long goalId) {
         validateUser(user);
 
-        // Verify goal exists
-        goalRepository.findById(goalId)
+        // Verify goal exists and belongs to user's family
+        Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
 
         return goalContributionRepository.findAllByGoal_IdOrderByCreatedAtDesc(goalId)
                 .stream()
@@ -108,6 +127,11 @@ public class GoalService {
 
         Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        // Verify the goal belongs to the user's family
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
 
         Account account = accountRepository.findByIdAndFamilyId(request.accountId(), user.getFamilies().getId())
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
@@ -126,9 +150,13 @@ public class GoalService {
     public void deleteContribution(User user, Long goalId, Long contributionId) {
         validateUser(user);
 
-        // Verify goal exists
-        goalRepository.findById(goalId)
+        // Verify goal exists and belongs to user's family
+        Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
 
         // Find and verify the contribution belongs to the user
         GoalContribution contribution = goalContributionRepository.findById(contributionId)
@@ -150,9 +178,13 @@ public class GoalService {
     public BigDecimal getTotalSaved(User user, Long goalId) {
         validateUser(user);
 
-        // Verify goal exists
-        goalRepository.findById(goalId)
+        // Verify goal exists and belongs to user's family
+        Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+        if (!goal.getFamilies().getId().equals(user.getFamilies().getId())) {
+            throw new IllegalArgumentException("Goal not found");
+        }
 
         // Calculate total from contributions
         return goalContributionRepository.findAllByGoal_IdOrderByCreatedAtDesc(goalId)
