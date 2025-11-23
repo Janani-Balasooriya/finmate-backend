@@ -51,6 +51,9 @@ List<ExpenseTransaction> findByFamilyAndDateBetween(Long familyId, LocalDate sta
 @Query("select et from ExpenseTransaction et where et.user.families.id = :familyId and et.account.id = :accountId order by et.transactionDate desc")
 List<ExpenseTransaction> findByFamilyAndAccountId(Long familyId, Long accountId);
 
+@Query("select et from ExpenseTransaction et where et.user = :user and et.account.id = :accountId order by et.transactionDate desc")
+List<ExpenseTransaction> findByUserAndAccountId(@Param("user") User user, @Param("accountId") Long accountId);
+
 @Query("select et from ExpenseTransaction et where et.user.families.id = :familyId and et.categoryItem.expenseCategory.id = :categoryId order by et.transactionDate desc")
 List<ExpenseTransaction> findByFamilyAndCategoryId(Long familyId, Long categoryId);
 

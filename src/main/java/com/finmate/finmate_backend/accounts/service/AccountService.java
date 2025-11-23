@@ -42,12 +42,13 @@ public class AccountService {
     }
 
     public List<AccountBalance> getAccountBalances(User user) {
-        return accountRepository.findByFamilyId(familyIdOf(user))
+        Long familyId = familyIdOf(user);
+        return accountRepository.findByFamilyId(familyId)
                 .stream()
                 .filter(Account::isActive)
                 .map(account -> {
                     // Calculate current balance from opening balance + incomes - expenses
-                    BigDecimal currentBalance = calculateCurrentBalance(account);
+                    BigDecimal currentBalance = calculateCurrentBalance(account, familyId);
                     return new AccountBalance(
                             account.getId(),
                             account.getName(),
@@ -124,37 +125,47 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-    private BigDecimal calculateCurrentBalance(Account account) {
+    private BigDecimal calculateCurrentBalance(Account account, Long familyId) {
         // Calculate current balance: opening_balance + total_income - total_expenses - total_goal_contributions
 
-        Long familyId = account.getUser().getFamilies().getId();
+        BigDecimal openingBalance = account.getOpeningBalance();
+        System.out.println("=== Account Balance Calculation for Account: " + account.getName() + " (ID: " + account.getId() + ") ===");
+        System.out.println("Opening Balance: " + openingBalance);
 
-        // Sum all income transactions for this account
+        // Sum all income transactions to this account (from account owner's family)
         BigDecimal totalIncome = incomeTransactionRepository
                 .findByFamilyIdAndAccountId(familyId, account.getId())
                 .stream()
                 .map(income -> income.getAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        System.out.println("Total Income: " + totalIncome);
 
-        // Sum all expense transactions for this account
+        // Sum all expense transactions from this account (from account owner's family)
         BigDecimal totalExpenses = expenseTransactionRepository
                 .findByFamilyAndAccountId(familyId, account.getId())
                 .stream()
                 .map(expense -> expense.getAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        System.out.println("Total Expenses: " + totalExpenses);
 
-        // Sum all goal contributions from this account
+        // Sum all goal contributions made from this account (from account owner's family)
         BigDecimal totalGoalContributions = goalContributionRepository
                 .findByFamilyIdAndAccountId(familyId, account.getId())
                 .stream()
                 .map(contribution -> contribution.getAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        System.out.println("Total Goal Contributions: " + totalGoalContributions);
 
         // Calculate final balance: opening + income - expenses - goal contributions
-        return account.getOpeningBalance()
+        BigDecimal finalBalance = openingBalance
                 .add(totalIncome)
                 .subtract(totalExpenses)
                 .subtract(totalGoalContributions);
+
+        System.out.println("Final Balance Calculation: " + openingBalance + " + " + totalIncome + " - " + totalExpenses + " - " + totalGoalContributions + " = " + finalBalance);
+        System.out.println("=== End Balance Calculation ===\n");
+
+        return finalBalance;
     }
 }
 
