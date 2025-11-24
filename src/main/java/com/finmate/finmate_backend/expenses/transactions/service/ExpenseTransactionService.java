@@ -101,8 +101,6 @@ public class ExpenseTransactionService {
         Account account = accountRepository.findByIdAndFamilyId(req.accountId(), familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to your family"));
 
-
-
         Long categoryItemId = req.categoryItemId();
 
         // Find subscription if provided and conversion from subscription id to actual category item id

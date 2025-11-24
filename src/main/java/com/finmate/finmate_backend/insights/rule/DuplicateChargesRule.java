@@ -41,10 +41,22 @@ public class DuplicateChargesRule implements InsightRule {
                 LocalDate date2 = tx2.getTransactionDate();
 
                 if (!merchant1.equals(merchant2)) continue;
-                if (ChronoUnit.HOURS.between(date1.atStartOfDay(), date2.atStartOfDay()) > 48) continue;
 
+                long hoursBetween = Math.abs(ChronoUnit.HOURS.between(date1.atStartOfDay(), date2.atStartOfDay()));
+                long daysBetween = hoursBetween / 24;
+
+                // Skip if transactions are likely legitimate recurring charges
+                // Allow monthly patterns (25-35 days apart) with similar amounts
+                if (daysBetween >= 25 && daysBetween <= 35) {
+                    continue; // Likely monthly bill - not a duplicate
+                }
+
+                // Skip if more than 7 days apart
+                if (hoursBetween > 168) continue; // 7 days = 168 hours
+
+                // For very close transactions (same day or next day), be more strict
                 BigDecimal diff = amount1.subtract(amount2).abs();
-                BigDecimal threshold = amount1.multiply(BigDecimal.valueOf(0.03)); // 3%
+                BigDecimal threshold = amount1.multiply(BigDecimal.valueOf(0.05)); // 5% tolerance
                 if (diff.compareTo(threshold) > 0) continue;
 
                 // Flag as potential duplicate
