@@ -2,6 +2,7 @@ package com.finmate.finmate_backend.goals.service;
 
 import com.finmate.finmate_backend.accounts.model.Account;
 import com.finmate.finmate_backend.accounts.repository.AccountRepository;
+import com.finmate.finmate_backend.accounts.service.AccountService;
 import com.finmate.finmate_backend.goals.dto.GoalDtos.*;
 import com.finmate.finmate_backend.goals.model.Goal;
 import com.finmate.finmate_backend.goals.model.GoalContribution;
@@ -25,6 +26,7 @@ public class GoalService {
     private final GoalRepository goalRepository;
     private final GoalContributionRepository goalContributionRepository;
     private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
     private void validateUser(User user) {
         if (user == null) throw new IllegalArgumentException("User is null");
@@ -135,6 +137,16 @@ public class GoalService {
 
         Account account = accountRepository.findByIdAndFamilyId(request.accountId(), user.getFamilies().getId())
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        // Validate account has sufficient balance
+        BigDecimal currentBalance = accountService.getAccountBalance(user, account.getId());
+        if (currentBalance.compareTo(request.amount()) < 0) {
+            throw new IllegalArgumentException(
+                String.format("Insufficient account balance. Available: %s, Required: %s",
+                    currentBalance.setScale(2, RoundingMode.HALF_UP),
+                    request.amount().setScale(2, RoundingMode.HALF_UP))
+            );
+        }
 
         GoalContribution contribution = new GoalContribution();
         contribution.setUser(user);

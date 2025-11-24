@@ -59,6 +59,12 @@ public class AccountService {
                 .toList();
     }
 
+    public BigDecimal getAccountBalance(User user, Long accountId) {
+        Account account = accountRepository.findByIdAndFamilyId(accountId, familyIdOf(user))
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        return calculateCurrentBalance(account, familyIdOf(user));
+    }
+
     public AccountItem createAccount(User user, CreateAccountRequest request) {
         if (accountRepository.existsByUser_Families_IdAndNameIgnoreCaseAndActiveTrue(familyIdOf(user), request.name())) {
             throw new IllegalArgumentException("An account with this name already exists");

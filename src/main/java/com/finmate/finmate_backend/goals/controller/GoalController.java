@@ -103,13 +103,15 @@ public class GoalController {
     }
 
     @PostMapping("/{goalId}/contributions")
-    public ResponseEntity<GoalContributionDto> addContribution(Authentication authentication,
+    public ResponseEntity<?> addContribution(Authentication authentication,
                                                                @PathVariable Long goalId,
                                                                @RequestBody CreateGoalContributionRequest request) {
         try {
             User user = getUser(authentication);
             GoalContributionDto contribution = goalService.addContribution(user, goalId, request);
             return ResponseEntity.ok(contribution);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(null);

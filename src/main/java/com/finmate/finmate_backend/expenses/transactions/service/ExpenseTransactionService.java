@@ -2,6 +2,7 @@ package com.finmate.finmate_backend.expenses.transactions.service;
 
 import com.finmate.finmate_backend.accounts.model.Account;
 import com.finmate.finmate_backend.accounts.repository.AccountRepository;
+import com.finmate.finmate_backend.accounts.service.AccountService;
 import com.finmate.finmate_backend.expenses.category.model.CategoryItem;
 import com.finmate.finmate_backend.expenses.category.repository.CategoryItemRepository;
 import com.finmate.finmate_backend.expenses.transactions.dto.ExpenseTransactionDtos.*;
@@ -30,11 +31,32 @@ public class ExpenseTransactionService {
 
     private final ExpenseTransactionRepository expenseTransactionRepository;
     private final AccountRepository accountRepository;
+    private final AccountService accountService;
     private final CategoryItemRepository categoryItemRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final InsightsCacheInvalidationService insightsCacheInvalidationService;
 
     private Long familyIdOf(User user) { return user.getFamilies().getId(); }
+
+    private void validateAccountBalance(User user, Account account, BigDecimal expenseAmount, BigDecimal existingExpenseAmount) {
+        // Get current account balance
+        BigDecimal currentBalance = accountService.getAccountBalance(user, account.getId());
+
+        // For updates, add back the existing expense amount since we're replacing it
+        if (existingExpenseAmount != null) {
+            currentBalance = currentBalance.add(existingExpenseAmount);
+        }
+
+        // Check if account has sufficient balance
+        if (currentBalance.compareTo(expenseAmount) < 0) {
+            throw new IllegalArgumentException(
+                String.format("Insufficient account balance. Available: %s, Required: %s",
+                    currentBalance.setScale(2, RoundingMode.HALF_UP),
+                    expenseAmount.setScale(2, RoundingMode.HALF_UP))
+            );
+        }
+    }
+
 
     public Page<ExpenseTransactionItem> getTransactions(User user, int page, int size) {
         Long familyId = familyIdOf(user);
@@ -101,6 +123,9 @@ public class ExpenseTransactionService {
         Account account = accountRepository.findByIdAndFamilyId(req.accountId(), familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to your family"));
 
+        // Validate account has sufficient balance
+        validateAccountBalance(user, account, req.amount(), null);
+
         Long categoryItemId = req.categoryItemId();
 
         // Find subscription if provided and conversion from subscription id to actual category item id
@@ -158,6 +183,10 @@ public class ExpenseTransactionService {
         // Find and validate account belongs to family
         Account account = accountRepository.findByIdAndFamilyId(req.accountId(), familyId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to your family"));
+
+        // Validate account has sufficient balance (pass existing amount for proper calculation)
+        BigDecimal newAmount = req.amount() != null ? req.amount() : transaction.getAmount();
+        validateAccountBalance(user, account, newAmount, transaction.getAmount());
 
         // Find and validate category item belongs to family
         CategoryItem categoryItem = categoryItemRepository.findById(req.categoryItemId())
